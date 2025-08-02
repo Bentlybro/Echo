@@ -64,8 +64,26 @@
                             <i data-lucide="heart"></i>
                             Liked Songs
                         </a></li>
+                        <li><a href="#" class="nav-item" data-view="recently-played">
+                            <i data-lucide="clock"></i>
+                            Recently Played
+                        </a></li>
                         <li><a href="#" class="nav-item" data-view="artists">Artists</a></li>
                         <li><a href="#" class="nav-item" data-view="albums">Albums</a></li>
+                    </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h3>Smart Playlists</h3>
+                    <ul class="sidebar-nav">
+                        <li><a href="#" class="nav-item" data-view="recently-added">
+                            <i data-lucide="plus-circle"></i>
+                            Recently Added
+                        </a></li>
+                        <li><a href="#" class="nav-item" data-view="most-played">
+                            <i data-lucide="trending-up"></i>
+                            Most Played
+                        </a></li>
                     </ul>
                 </div>
                 
@@ -101,6 +119,7 @@
                     </div>
                     
                     <div class="song-list-header">
+                        <span class="col-thumbnail"></span>
                         <span class="col-info">Song</span>
                         <span class="col-album">Album</span>
                         <span class="col-duration">Duration</span>
@@ -336,6 +355,15 @@
         <div class="context-menu-item" id="context-play-song">
             <i data-lucide="play"></i>
             Play Song
+        </div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" id="context-play-next">
+            <i data-lucide="skip-forward"></i>
+            Play Next
+        </div>
+        <div class="context-menu-item" id="context-add-to-queue">
+            <i data-lucide="list-plus"></i>
+            Add to Queue
         </div>
         <div class="context-menu-separator"></div>
         <div class="context-menu-item" id="context-search-artist">

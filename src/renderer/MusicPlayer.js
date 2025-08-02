@@ -3,6 +3,9 @@ class MusicPlayer {
     this.songs = [];
     this.likedSongs = [];
     this.playlists = [];
+    this.recentlyPlayed = [];
+    this.recentlyAdded = [];
+    this.mostPlayed = [];
     this.currentView = 'all-songs';
     this.currentPlaylist = null;
     this.searchQuery = '';
@@ -77,8 +80,10 @@ class MusicPlayer {
     await this.loadSongs();
     await this.loadLikedSongs();
     await this.loadPlaylists();
+    await this.loadSmartPlaylists();
     this.renderCurrentView();
     this.setupEventListeners();
+    this.setupMediaKeys();
   }
 
   setupEventListeners() {
@@ -141,6 +146,22 @@ class MusicPlayer {
     }
   }
 
+  async loadSmartPlaylists() {
+    try {
+      this.recentlyPlayed = await window.electronAPI.getRecentlyPlayed();
+      const smartPlaylists = await window.electronAPI.getSmartPlaylists();
+      this.recentlyAdded = smartPlaylists.recentlyAdded || [];
+      this.mostPlayed = smartPlaylists.mostPlayed || [];
+      console.log('Loaded smart playlists - Recently Played:', this.recentlyPlayed.length, 
+                  'Recently Added:', this.recentlyAdded.length, 'Most Played:', this.mostPlayed.length);
+    } catch (error) {
+      console.error('Error loading smart playlists:', error);
+      this.recentlyPlayed = [];
+      this.recentlyAdded = [];
+      this.mostPlayed = [];
+    }
+  }
+
   getCurrentSongs() {
     let baseSongs;
     switch (this.currentView) {
@@ -149,6 +170,15 @@ class MusicPlayer {
         break;
       case 'liked-songs':
         baseSongs = this.likedSongs;
+        break;
+      case 'recently-played':
+        baseSongs = this.recentlyPlayed;
+        break;
+      case 'recently-added':
+        baseSongs = this.recentlyAdded;
+        break;
+      case 'most-played':
+        baseSongs = this.mostPlayed;
         break;
       case 'artists':
         baseSongs = this.getArtistViewSongs();
@@ -212,6 +242,15 @@ class MusicPlayer {
         break;
       case 'liked-songs':
         this.currentViewTitle.textContent = 'Liked Songs';
+        break;
+      case 'recently-played':
+        this.currentViewTitle.textContent = 'Recently Played';
+        break;
+      case 'recently-added':
+        this.currentViewTitle.textContent = 'Recently Added';
+        break;
+      case 'most-played':
+        this.currentViewTitle.textContent = 'Most Played';
         break;
       case 'artists':
         this.currentViewTitle.textContent = 'Artists';
@@ -439,6 +478,22 @@ class MusicPlayer {
       }
     });
 
+    document.getElementById('context-play-next').addEventListener('click', () => {
+      if (this.contextMenuSong) {
+        window.audioPlayer.playNext(this.contextMenuSong);
+        this.notificationService.showNotification(`"${this.contextMenuSong.title}" will play next`, 'success');
+        this.hideContextMenu();
+      }
+    });
+
+    document.getElementById('context-add-to-queue').addEventListener('click', () => {
+      if (this.contextMenuSong) {
+        window.audioPlayer.addToQueue(this.contextMenuSong);
+        this.notificationService.showNotification(`"${this.contextMenuSong.title}" added to queue`, 'success');
+        this.hideContextMenu();
+      }
+    });
+
     document.getElementById('context-search-artist').addEventListener('click', () => {
       if (this.contextMenuSong) {
         this.searchByArtist(this.contextMenuSong.artist);
@@ -518,6 +573,72 @@ class MusicPlayer {
     if (!album || album === 'Unknown Album') return;
     this.searchInput.value = album;
     this.handleSearch(album);
+  }
+
+  setupMediaKeys() {
+    // Register media keys
+    window.electronAPI.registerMediaKeys();
+
+    // Listen for media key events
+    window.electronAPI.onMediaKeyPlayPause(() => {
+      if (window.audioPlayer) {
+        window.audioPlayer.togglePlayPause();
+      }
+    });
+
+    window.electronAPI.onMediaKeyNext(() => {
+      if (window.audioPlayer) {
+        window.audioPlayer.nextTrack();
+      }
+    });
+
+    window.electronAPI.onMediaKeyPrevious(() => {
+      if (window.audioPlayer) {
+        window.audioPlayer.previousTrack();
+      }
+    });
+
+    console.log('Media keys setup complete');
+  }
+
+  async showOverlayNotification(song) {
+    try {
+      // Get album art data for the overlay
+      let albumArtData = null;
+      let albumArtFormat = null;
+
+      try {
+        const albumArtResult = await window.electronAPI.getAlbumArt(song.id);
+        if (albumArtResult.success && albumArtResult.data) {
+          albumArtData = Array.from(albumArtResult.data);
+          albumArtFormat = albumArtResult.format;
+        }
+      } catch (albumArtError) {
+        console.log('No album art available for overlay');
+      }
+
+      const songData = {
+        title: song.title,
+        artist: song.artist,
+        album: song.album,
+        albumArtData: albumArtData,
+        albumArtFormat: albumArtFormat
+      };
+
+      await window.electronAPI.showOverlayNotification(songData);
+    } catch (error) {
+      console.error('Error showing overlay notification:', error);
+    }
+  }
+
+  async trackSongPlay(songId) {
+    try {
+      await window.electronAPI.trackSongPlay(songId);
+      // Reload recently played list
+      this.recentlyPlayed = await window.electronAPI.getRecentlyPlayed();
+    } catch (error) {
+      console.error('Error tracking song play:', error);
+    }
   }
 }
 

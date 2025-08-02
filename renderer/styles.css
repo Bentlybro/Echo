@@ -433,8 +433,8 @@ body {
 
 .song-list-header {
     display: grid;
-    grid-template-columns: 3fr 1.5fr 80px 80px;
-    gap: 24px;
+    grid-template-columns: 50px 3fr 1.5fr 80px 80px;
+    gap: 16px;
     padding: 16px 0;
     font-weight: 300;
     color: #666666;
@@ -452,8 +452,8 @@ body {
 
 .song-item {
     display: grid;
-    grid-template-columns: 3fr 1.5fr 80px 80px;
-    gap: 24px;
+    grid-template-columns: 50px 3fr 1.5fr 80px 80px;
+    gap: 16px;
     padding: 16px 0;
     border-bottom: 1px solid #0f0f0f;
     cursor: pointer;
@@ -464,6 +464,32 @@ body {
 .song-item:hover {
     background: rgba(255, 255, 255, 0.02);
     padding-left: 8px;
+}
+
+.song-thumbnail {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.album-thumbnail {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    background: var(--tertiary-bg);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.thumbnail-placeholder {
+    width: 20px;
+    height: 20px;
+    color: var(--secondary-text);
+    stroke-width: 1.5;
 }
 
 .song-item:hover .song-actions .delete-btn {
@@ -1416,7 +1442,8 @@ body {
     
     .song-list-header,
     .song-item {
-        grid-template-columns: 2fr 1fr 60px 60px;
+        grid-template-columns: 40px 2fr 60px 60px;
+        gap: 12px;
     }
     
     .col-album,

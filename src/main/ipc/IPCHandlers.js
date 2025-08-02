@@ -1,11 +1,12 @@
-const { ipcMain, dialog } = require('electron');
+const { ipcMain, dialog, Notification } = require('electron');
 
 class IPCHandlers {
-  constructor(database, folderWatcher, mainWindow, trayService) {
+  constructor(database, folderWatcher, mainWindow, trayService, overlayService) {
     this.database = database;
     this.folderWatcher = folderWatcher;
     this.mainWindow = mainWindow;
     this.trayService = trayService;
+    this.overlayService = overlayService;
   }
 
   setupHandlers() {
@@ -14,6 +15,8 @@ class IPCHandlers {
     this.setupFolderHandlers();
     this.setupTrayHandlers();
     this.setupWindowHandlers();
+    this.setupMediaHandlers();
+    this.setupNotificationHandlers();
   }
 
   setupDatabaseHandlers() {
@@ -123,6 +126,98 @@ class IPCHandlers {
 
     ipcMain.handle('window-is-maximized', () => {
       return this.mainWindow.isMaximized();
+    });
+  }
+
+  setupMediaHandlers() {
+    // Set up global media key listeners
+    ipcMain.on('register-media-keys', () => {
+      this.mainWindow.webContents.setWindowOpenHandler = null; // Clear any existing handlers
+      
+      // Register global shortcuts for media keys
+      const { globalShortcut } = require('electron');
+      
+      // Clear existing shortcuts
+      globalShortcut.unregisterAll();
+      
+      // Register media key shortcuts
+      globalShortcut.register('MediaPlayPause', () => {
+        this.mainWindow.webContents.send('media-key-play-pause');
+      });
+      
+      globalShortcut.register('MediaNextTrack', () => {
+        this.mainWindow.webContents.send('media-key-next');
+      });
+      
+      globalShortcut.register('MediaPreviousTrack', () => {
+        this.mainWindow.webContents.send('media-key-previous');
+      });
+      
+      console.log('Media keys registered');
+    });
+
+    ipcMain.on('unregister-media-keys', () => {
+      const { globalShortcut } = require('electron');
+      globalShortcut.unregisterAll();
+      console.log('Media keys unregistered');
+    });
+  }
+
+  setupNotificationHandlers() {
+    ipcMain.handle('show-overlay-notification', async (event, songData) => {
+      try {
+        // Show overlay if main window is not focused, minimized, or not visible
+        if (!this.mainWindow.isFocused() || this.mainWindow.isMinimized() || !this.mainWindow.isVisible()) {
+          await this.overlayService.showSongNotification(songData);
+        }
+        return { success: true };
+      } catch (error) {
+        console.error('Error showing overlay notification:', error);
+        return { success: false, error: error.message };
+      }
+    });
+
+    ipcMain.handle('hide-overlay-notification', async () => {
+      try {
+        this.overlayService.hideOverlay();
+        return { success: true };
+      } catch (error) {
+        console.error('Error hiding overlay notification:', error);
+        return { success: false, error: error.message };
+      }
+    });
+
+    // Track recently played songs
+    ipcMain.handle('track-song-play', async (event, songId) => {
+      try {
+        // Add to recently played table
+        this.database.addToRecentlyPlayed(songId);
+        return { success: true };
+      } catch (error) {
+        console.error('Error tracking song play:', error);
+        return { success: false, error: error.message };
+      }
+    });
+
+    ipcMain.handle('get-recently-played', async () => {
+      try {
+        return this.database.getRecentlyPlayed();
+      } catch (error) {
+        console.error('Error getting recently played:', error);
+        return [];
+      }
+    });
+
+    ipcMain.handle('get-smart-playlists', async () => {
+      try {
+        return {
+          recentlyAdded: this.database.getRecentlyAdded(),
+          mostPlayed: this.database.getMostPlayed()
+        };
+      } catch (error) {
+        console.error('Error getting smart playlists:', error);
+        return { recentlyAdded: [], mostPlayed: [] };
+      }
     });
   }
 }

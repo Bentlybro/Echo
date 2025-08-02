@@ -10,6 +10,8 @@ class AudioPlayer {
     this.volume = 1.0;
     this.currentAlbumArtUrl = null;
     this.isHoveringProgress = false;
+    this.queue = [];
+    this.originalPlaylist = [];
     
     // Crossfade functionality
     this.nextAudio = null; // Second audio element for crossfading
@@ -191,9 +193,10 @@ class AudioPlayer {
       this.playPauseBtn.innerHTML = '<i data-lucide="pause"></i>';
       lucide.createIcons();
       
-      // Update play count in database
-      if (this.currentSong) {
-        // Note: This would need to be implemented in the database
+      // Track song play and show notification
+      if (this.currentSong && window.musicPlayer) {
+        window.musicPlayer.trackSongPlay(this.currentSong.id);
+        window.musicPlayer.showOverlayNotification(this.currentSong);
         console.log(`Playing: ${this.currentSong.title}`);
       }
     } catch (error) {
@@ -232,6 +235,21 @@ class AudioPlayer {
   }
 
   nextTrack() {
+    // Check if there's a song in the queue first
+    if (this.queue.length > 0) {
+      const nextSong = this.queue.shift(); // Remove and get first song from queue
+      // Find the song's index in the original playlist for proper context
+      const songIndex = this.originalPlaylist.findIndex(s => s.id === nextSong.id);
+      this.currentIndex = songIndex >= 0 ? songIndex : this.currentIndex;
+      this.loadSong(nextSong, this.originalPlaylist, this.currentIndex);
+      
+      if (this.isPlaying) {
+        this.play();
+      }
+      return;
+    }
+
+    // No queue, proceed with normal playlist logic
     if (this.playlist.length === 0) return;
     
     let newIndex;
@@ -554,7 +572,9 @@ class AudioPlayer {
   playPlaylist(songs, startIndex = 0) {
     if (songs.length === 0) return;
     
-    this.playlist = songs;
+    this.originalPlaylist = [...songs];
+    this.playlist = [...songs];
+    this.queue = []; // Clear queue when starting new playlist
     this.currentIndex = startIndex;
     this.loadSong(songs[startIndex], songs, startIndex);
     this.play();
@@ -616,6 +636,38 @@ class AudioPlayer {
 
     // Enable/disable button based on whether there's a current song
     this.likeCurrentBtn.disabled = !this.currentSong;
+  }
+
+  // Queue management methods
+  addToQueue(song) {
+    if (!song) return;
+    this.queue.push(song);
+    console.log(`Added "${song.title}" to queue. Queue length: ${this.queue.length}`);
+  }
+
+  playNext(song) {
+    if (!song) return;
+    this.queue.unshift(song); // Add to beginning of queue
+    console.log(`Added "${song.title}" to play next. Queue length: ${this.queue.length}`);
+  }
+
+  getQueue() {
+    return [...this.queue];
+  }
+
+  clearQueue() {
+    this.queue = [];
+    console.log('Queue cleared');
+  }
+
+  removeFromQueue(songId) {
+    const index = this.queue.findIndex(song => song.id === songId);
+    if (index >= 0) {
+      const removed = this.queue.splice(index, 1)[0];
+      console.log(`Removed "${removed.title}" from queue`);
+      return removed;
+    }
+    return null;
   }
 }
 

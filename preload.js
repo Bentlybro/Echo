@@ -37,6 +37,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
   windowClose: () => ipcRenderer.invoke('window-close'),
   windowIsMaximized: () => ipcRenderer.invoke('window-is-maximized'),
   
+  // Custom overlay notifications
+  showOverlayNotification: (songData) => ipcRenderer.invoke('show-overlay-notification', songData),
+  hideOverlayNotification: () => ipcRenderer.invoke('hide-overlay-notification'),
+  
+  // Recently played and smart playlists
+  trackSongPlay: (songId) => ipcRenderer.invoke('track-song-play', songId),
+  getRecentlyPlayed: () => ipcRenderer.invoke('get-recently-played'),
+  getSmartPlaylists: () => ipcRenderer.invoke('get-smart-playlists'),
+  
+  // Media keys
+  registerMediaKeys: () => ipcRenderer.send('register-media-keys'),
+  unregisterMediaKeys: () => ipcRenderer.send('unregister-media-keys'),
+  
   // Listen for events
   onSongAdded: (callback) => ipcRenderer.on('song-added', callback),
   onSongsBatchAdded: (callback) => ipcRenderer.on('songs-batch-added', callback),
@@ -45,6 +58,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onBulkImportProgress: (callback) => ipcRenderer.on('bulk-import-progress', callback),
   onBulkImportComplete: (callback) => ipcRenderer.on('bulk-import-complete', callback),
   onOpenSettingsModal: (callback) => ipcRenderer.on('open-settings-modal', callback),
+  
+  // Media key events
+  onMediaKeyPlayPause: (callback) => ipcRenderer.on('media-key-play-pause', callback),
+  onMediaKeyNext: (callback) => ipcRenderer.on('media-key-next', callback),
+  onMediaKeyPrevious: (callback) => ipcRenderer.on('media-key-previous', callback),
   
   // Node.js path utilities for file handling
   path: {

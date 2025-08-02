@@ -4,6 +4,7 @@ const WindowManager = require('./services/WindowManager');
 const SettingsManager = require('./services/SettingsManager');
 const FolderWatcher = require('./services/FolderWatcher');
 const TrayService = require('./services/TrayService');
+const OverlayService = require('./services/OverlayService');
 const IPCHandlers = require('./ipc/IPCHandlers');
 
 class MusicPlayerApp {
@@ -13,6 +14,7 @@ class MusicPlayerApp {
     this.database = null;
     this.folderWatcher = null;
     this.trayService = null;
+    this.overlayService = null;
     this.ipcHandlers = null;
   }
 
@@ -31,6 +33,7 @@ class MusicPlayerApp {
 
   setupServices() {
     this.trayService = new TrayService(this.mainWindow, this.settingsManager);
+    this.overlayService = new OverlayService();
     
     this.folderWatcher = new FolderWatcher(
       this.database, 
@@ -42,7 +45,8 @@ class MusicPlayerApp {
       this.database, 
       this.folderWatcher, 
       this.mainWindow,
-      this.trayService
+      this.trayService,
+      this.overlayService
     );
     
     this.folderWatcher.initialize();

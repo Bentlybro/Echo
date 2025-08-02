@@ -45,9 +45,18 @@ class MusicDatabase {
         UNIQUE(playlist_id, song_id)
       );
 
+      CREATE TABLE IF NOT EXISTS recently_played (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        song_id INTEGER,
+        played_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (song_id) REFERENCES songs (id) ON DELETE CASCADE
+      );
+
       CREATE INDEX IF NOT EXISTS idx_songs_artist ON songs(artist);
       CREATE INDEX IF NOT EXISTS idx_songs_album ON songs(album);
       CREATE INDEX IF NOT EXISTS idx_playlist_songs_playlist ON playlist_songs(playlist_id);
+      CREATE INDEX IF NOT EXISTS idx_recently_played_song ON recently_played(song_id);
+      CREATE INDEX IF NOT EXISTS idx_recently_played_date ON recently_played(played_at);
     `);
 
     // Migrate existing database to add new columns
@@ -258,6 +267,70 @@ class MusicDatabase {
       return songs;
     } catch (error) {
       console.error('Error getting liked songs:', error);
+      return [];
+    }
+  }
+
+  addToRecentlyPlayed(songId) {
+    try {
+      // Add to recently played
+      this.db.prepare('INSERT INTO recently_played (song_id) VALUES (?)').run(songId);
+      
+      // Keep only the last 100 recently played songs
+      this.db.prepare(`
+        DELETE FROM recently_played 
+        WHERE id NOT IN (
+          SELECT id FROM recently_played 
+          ORDER BY played_at DESC 
+          LIMIT 100
+        )
+      `).run();
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error adding to recently played:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  getRecentlyPlayed(limit = 50) {
+    try {
+      return this.db.prepare(`
+        SELECT DISTINCT s.*, rp.played_at
+        FROM songs s
+        JOIN recently_played rp ON s.id = rp.song_id
+        ORDER BY rp.played_at DESC
+        LIMIT ?
+      `).all(limit);
+    } catch (error) {
+      console.error('Error getting recently played:', error);
+      return [];
+    }
+  }
+
+  getRecentlyAdded(limit = 50) {
+    try {
+      return this.db.prepare(`
+        SELECT * FROM songs 
+        ORDER BY date_added DESC 
+        LIMIT ?
+      `).all(limit);
+    } catch (error) {
+      console.error('Error getting recently added:', error);
+      return [];
+    }
+  }
+
+  getMostPlayed(limit = 50) {
+    try {
+      return this.db.prepare(`
+        SELECT * FROM songs 
+        WHERE play_count > 0
+        ORDER BY play_count DESC, last_played DESC
+        LIMIT ?
+      `).all(limit);
+    } catch (error) {
+      console.error('Error getting most played:', error);
       return [];
     }
   }
