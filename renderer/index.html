@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Music Player</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="app-title">Music Player</h1>
+            <div class="header-controls">
+                <button id="add-music-btn" class="btn btn-secondary">Add Music</button>
+                <button id="create-playlist-btn" class="btn btn-secondary">New Playlist</button>
+                <button id="manage-folders-btn" class="btn btn-primary">Import Folders</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <h3>Library</h3>
+                    <ul class="sidebar-nav">
+                        <li><a href="#" class="nav-item active" data-view="all-songs">All Songs</a></li>
+                        <li><a href="#" class="nav-item" data-view="artists">Artists</a></li>
+                        <li><a href="#" class="nav-item" data-view="albums">Albums</a></li>
+                    </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h3>Playlists</h3>
+                    <ul id="playlists-list" class="sidebar-nav">
+                        <!-- Playlists will be loaded here -->
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- Content Area -->
+            <main class="content">
+                <!-- Drop Zone -->
+                <div id="drop-zone" class="drop-zone">
+                    <div class="drop-zone-content">
+                        <div class="drop-icon"></div>
+                        <p>Drag and drop music files here</p>
+                        <p class="drop-hint">or use the "Add Music" button</p>
+                    </div>
+                </div>
+
+                <!-- Song List -->
+                <div id="song-list-container" class="song-list-container">
+                    <div class="list-header">
+                        <div class="list-title">
+                            <h2 id="current-view-title">All Songs</h2>
+                            <span id="song-count" class="song-count">0 songs</span>
+                        </div>
+                        <div class="list-controls">
+                            <button id="shuffle-btn" class="btn btn-icon icon-shuffle" title="Shuffle"></button>
+                            <button id="play-all-btn" class="btn btn-primary">Play All</button>
+                        </div>
+                    </div>
+                    
+                    <div class="song-list-header">
+                        <span class="col-title">Title</span>
+                        <span class="col-artist">Artist</span>
+                        <span class="col-album">Album</span>
+                        <span class="col-duration">Duration</span>
+                        <span class="col-actions">Actions</span>
+                    </div>
+                    
+                    <div id="song-list" class="song-list">
+                        <!-- Songs will be loaded here -->
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Player Controls -->
+        <footer class="player-controls">
+            <div class="now-playing">
+                <div class="album-art">
+                    <div class="album-placeholder"></div>
+                </div>
+                <div class="track-info">
+                    <div id="current-title" class="track-title">No song selected</div>
+                    <div id="current-artist" class="track-artist">-</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="prev-btn" class="control-btn icon-prev"></button>
+                <button id="play-pause-btn" class="control-btn play-btn icon-play"></button>
+                <button id="next-btn" class="control-btn icon-next"></button>
+            </div>
+
+            <div class="progress-container">
+                <span id="current-time" class="time">0:00</span>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-track">
+                        <div id="progress-bar-fill" class="progress-bar-fill"></div>
+                    </div>
+                    <div id="progress-bar-thumb" class="progress-bar-thumb"></div>
+                </div>
+                <span id="total-time" class="time">0:00</span>
+            </div>
+
+            <div class="volume-container">
+                <button id="mute-btn" class="control-btn icon-volume"></button>
+                <input type="range" id="volume-bar" class="volume-bar" min="0" max="100" value="100">
+            </div>
+        </footer>
+    </div>
+
+    <!-- Hidden audio element -->
+    <audio id="audio-player" preload="metadata"></audio>
+
+    <!-- Modal for creating playlists -->
+    <div id="playlist-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Playlist</h3>
+                <button class="modal-close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="playlist-name-input" placeholder="Playlist name" maxlength="50">
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-playlist-btn" class="btn btn-secondary">Cancel</button>
+                <button id="create-playlist-confirm-btn" class="btn btn-primary">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for managing watched folders -->
+    <div id="folders-modal" class="modal">
+        <div class="modal-content" style="width: 600px;">
+            <div class="modal-header">
+                <h3>Import Folders</h3>
+                <button class="modal-close" id="folders-modal-close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="folders-section">
+                    <div class="section-header">
+                        <h4>Watched Folders</h4>
+                        <button id="add-folder-from-modal-btn" class="btn btn-primary btn-small">Add Folder</button>
+                    </div>
+                    <p class="section-description">Folders are automatically monitored for new music files</p>
+                    <div id="watched-folders-list" class="watched-folders">
+                        <!-- Watched folders will be loaded here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close-folders-btn" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification container -->
+    <div id="notification-container" class="notification-container"></div>
+
+    <!-- Bulk import progress -->
+    <div id="bulk-import-progress" class="bulk-import-progress">
+        <div class="progress-header">
+            <span id="progress-title">Importing music files...</span>
+            <button id="progress-close" class="progress-close">×</button>
+        </div>
+        <div class="progress-bar-wrapper">
+            <div id="import-progress-bar" class="import-progress-bar"></div>
+        </div>
+        <div class="progress-stats">
+            <span id="progress-text">Processing files...</span>
+            <span id="progress-numbers">0 / 0</span>
+        </div>
+    </div>
+
+    <!-- Utility scripts -->
+    <script src="../src/renderer/utils/formatters.js"></script>
+    
+    <!-- Service scripts -->
+    <script src="../src/renderer/services/NotificationService.js"></script>
+    <script src="../src/renderer/services/ProgressService.js"></script>
+    
+    <!-- Component scripts -->
+    <script src="../src/renderer/components/SongRenderer.js"></script>
+    <script src="../src/renderer/components/PlaylistManager.js"></script>
+    <script src="../src/renderer/components/FolderManager.js"></script>
+    <script src="../src/renderer/components/DragDropHandler.js"></script>
+    
+    <!-- Main scripts -->
+    <script src="../src/renderer/MusicPlayer.js"></script>
+    <script src="audio-player.js"></script>
+    
+    <!-- Initialize app -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            window.musicPlayer = new MusicPlayer();
+        });
+    </script>
+</body>
+</html>
