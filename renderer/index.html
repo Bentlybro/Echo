@@ -74,11 +74,10 @@
                     </div>
                     
                     <div class="song-list-header">
-                        <span class="col-title">Title</span>
-                        <span class="col-artist">Artist</span>
+                        <span class="col-info">Song</span>
                         <span class="col-album">Album</span>
                         <span class="col-duration">Duration</span>
-                        <span class="col-actions">Actions</span>
+                        <span class="col-actions">♡</span>
                     </div>
                     
                     <div id="song-list" class="song-list">
@@ -250,6 +249,7 @@
                                     <button class="preset-btn" data-theme="default">Default</button>
                                     <button class="preset-btn" data-theme="dark-blue">Dark Blue</button>
                                     <button class="preset-btn" data-theme="purple">Purple</button>
+                                    <button class="preset-btn" data-theme="dark-pink">Dark Pink</button>
                                     <button class="preset-btn" data-theme="green">Green</button>
                                     <button class="preset-btn" data-theme="red">Red</button>
                                 </div>
@@ -267,11 +267,12 @@
                                     Enable crossfade between tracks
                                 </label>
                             </div>
-                            <div class="setting-item">
-                                <label>
-                                    <input type="checkbox" id="gapless-playback">
-                                    Gapless playback
-                                </label>
+                            <div class="setting-item crossfade-duration" id="crossfade-duration-setting" style="display: none;">
+                                <label for="crossfade-duration">Crossfade Duration</label>
+                                <div class="slider-container">
+                                    <input type="range" id="crossfade-duration" min="1" max="10" value="3" step="1">
+                                    <span id="crossfade-duration-value">3 seconds</span>
+                                </div>
                             </div>
                         </div>
                     </div>

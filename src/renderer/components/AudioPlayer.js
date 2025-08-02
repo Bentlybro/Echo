@@ -10,7 +10,18 @@ class AudioPlayer {
     this.volume = 1.0;
     this.currentAlbumArtUrl = null;
     
+    // Crossfade functionality
+    this.nextAudio = null; // Second audio element for crossfading
+    this.crossfadeSettings = {
+      enabled: false,
+      duration: 3 // seconds
+    };
+    this.isCrossfading = false;
+    this.crossfadeTimeout = null;
+    this.crossfadeInterval = null;
+    
     this.initializeElements();
+    this.createSecondAudioElement();
     this.bindEvents();
   }
 
@@ -29,6 +40,18 @@ class AudioPlayer {
     this.currentTitleEl = document.getElementById('current-title');
     this.currentArtistEl = document.getElementById('current-artist');
     this.shuffleBtn = document.getElementById('shuffle-btn');
+  }
+
+  createSecondAudioElement() {
+    // Create a second hidden audio element for crossfading
+    this.nextAudio = document.createElement('audio');
+    this.nextAudio.preload = 'metadata';
+    this.nextAudio.volume = 0; // Start at 0 volume for crossfade
+    document.body.appendChild(this.nextAudio);
+  }
+
+  updateCrossfadeSettings(settings) {
+    this.crossfadeSettings = { ...this.crossfadeSettings, ...settings };
   }
 
   bindEvents() {
@@ -243,7 +266,15 @@ class AudioPlayer {
 
   setVolume(volume) {
     this.volume = Math.max(0, Math.min(1, volume));
+    
+    // Set volume for main audio
     this.audio.volume = this.volume;
+    
+    // If not crossfading, ensure nextAudio is silent
+    if (this.nextAudio && !this.isCrossfading) {
+      this.nextAudio.volume = 0;
+    }
+    
     this.volumeBar.value = this.volume * 100;
     this.volumePercentageEl.textContent = Math.round(this.volume * 100) + '%';
     
@@ -285,10 +316,166 @@ class AudioPlayer {
       const progress = (this.audio.currentTime / this.audio.duration) * 100;
       this.updateProgressBar(progress);
       this.currentTimeEl.textContent = this.formatTime(this.audio.currentTime);
+      
+      // Check if we should start crossfading
+      this.checkCrossfadeStart();
     }
   }
 
+  checkCrossfadeStart() {
+    if (!this.crossfadeSettings.enabled || this.isCrossfading || this.isRepeat) {
+      return;
+    }
+
+    const timeLeft = this.audio.duration - this.audio.currentTime;
+    
+    // Start crossfade when we reach the crossfade duration before the end
+    if (timeLeft <= this.crossfadeSettings.duration && timeLeft > 0) {
+      this.startCrossfade();
+    }
+  }
+
+  startCrossfade() {
+    if (this.isCrossfading || !this.hasNextTrack()) {
+      return;
+    }
+
+    this.isCrossfading = true;
+    
+    // Calculate next track index and song at the start
+    this.nextTrackIndex = this.getNextTrackIndex();
+    const nextSong = this.playlist[this.nextTrackIndex];
+    
+    if (!nextSong) {
+      this.isCrossfading = false;
+      return;
+    }
+
+    // Load next song in the second audio element
+    this.nextAudio.src = `file://${nextSong.file_path}`;
+    this.nextAudio.volume = 0; // Start silent
+    this.nextAudio.currentTime = 0;
+    
+    // Start playing the next song immediately (both songs will play simultaneously)
+    this.nextAudio.play().then(() => {
+      // Begin crossfade - both songs are now playing
+      this.performCrossfade();
+    }).catch(error => {
+      console.error('Error starting next track for crossfade:', error);
+      this.isCrossfading = false;
+    });
+  }
+
+  performCrossfade() {
+    const duration = this.crossfadeSettings.duration * 1000; // Convert to milliseconds
+    const steps = 100; // More steps for smoother crossfade
+    const stepTime = duration / steps;
+    
+    let step = 0;
+    const originalVolume = this.volume;
+    
+    this.crossfadeInterval = setInterval(() => {
+      step++;
+      const progress = step / steps;
+      
+      // Both tracks are playing simultaneously
+      // Current track: fade out from full volume to 0
+      this.audio.volume = originalVolume * (1 - progress);
+      
+      // Next track: fade in from 0 to full volume  
+      this.nextAudio.volume = originalVolume * progress;
+      
+      if (step >= steps) {
+        // Crossfade complete - both tracks were playing, now switch
+        this.completeCrossfade();
+      }
+    }, stepTime);
+  }
+
+  completeCrossfade() {
+    // Clear the crossfade interval
+    if (this.crossfadeInterval) {
+      clearInterval(this.crossfadeInterval);
+      this.crossfadeInterval = null;
+    }
+    
+    // Stop and reset the old current track (it was faded out)
+    this.audio.pause();
+    this.audio.currentTime = 0;
+    this.audio.volume = 0;
+    
+    // Swap the audio elements - nextAudio becomes the new current audio
+    const tempAudio = this.audio;
+    this.audio = this.nextAudio;
+    this.nextAudio = tempAudio;
+    
+    // Update current song info to the song that's now playing
+    this.currentIndex = this.nextTrackIndex;
+    this.currentSong = this.playlist[this.currentIndex];
+    
+    // Set proper volumes
+    this.audio.volume = this.volume; // The new current track at full volume
+    this.nextAudio.volume = 0; // The old track (now nextAudio) is silent
+    
+    // Update UI to reflect the new current song
+    this.updateNowPlaying();
+    this.updatePlayingState();
+    
+    // Add event listeners to the new current audio element
+    this.bindAudioEvents();
+    
+    this.isCrossfading = false;
+  }
+
+  bindAudioEvents() {
+    // Remove old event listeners to prevent duplicates
+    this.audio.removeEventListener('loadedmetadata', this.onLoadedMetadata);
+    this.audio.removeEventListener('timeupdate', this.onTimeUpdate);
+    this.audio.removeEventListener('ended', this.onTrackEnded);
+    this.audio.removeEventListener('error', this.onError);
+    
+    // Add event listeners to current audio element
+    this.audio.addEventListener('loadedmetadata', () => this.onLoadedMetadata());
+    this.audio.addEventListener('timeupdate', () => this.onTimeUpdate());
+    this.audio.addEventListener('ended', () => this.onTrackEnded());
+    this.audio.addEventListener('error', (e) => this.onError(e));
+  }
+
+  hasNextTrack() {
+    if (this.playlist.length === 0) return false;
+    
+    if (this.isShuffle) {
+      return true; // With shuffle, there's always a next track (could be random)
+    }
+    
+    return this.currentIndex < this.playlist.length - 1;
+  }
+
+  getNextTrackIndex() {
+    if (this.playlist.length === 0) return -1;
+    
+    if (this.isShuffle) {
+      let nextIndex;
+      do {
+        nextIndex = Math.floor(Math.random() * this.playlist.length);
+      } while (nextIndex === this.currentIndex && this.playlist.length > 1);
+      return nextIndex;
+    }
+    
+    return (this.currentIndex + 1) % this.playlist.length;
+  }
+
+  getNextSong() {
+    const nextIndex = this.getNextTrackIndex();
+    return nextIndex >= 0 ? this.playlist[nextIndex] : null;
+  }
+
   onTrackEnded() {
+    // If we're crossfading, the track end is handled by completeCrossfade
+    if (this.isCrossfading) {
+      return;
+    }
+    
     if (this.isRepeat) {
       this.audio.currentTime = 0;
       this.play();

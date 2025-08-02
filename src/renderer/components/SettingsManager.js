@@ -51,6 +51,20 @@ class SettingsManager {
         errorColor: '#fc8181',
         warningColor: '#f6ad55'
       },
+      'dark-pink': {
+        primaryBg: '#2d1b2e',
+        secondaryBg: '#3a1e3c',
+        tertiaryBg: '#4a2c4a',
+        primaryText: '#fdf2f8',
+        secondaryText: '#d8b4fe',
+        accentColor: '#ec4899',
+        borderColor: '#7c2d60',
+        borderLight: '#be185d',
+        hoverBg: '#4c2649',
+        successColor: '#34d399',
+        errorColor: '#f87171',
+        warningColor: '#fbbf24'
+      },
       green: {
         primaryBg: '#0c1618',
         secondaryBg: '#1a202c',
@@ -82,8 +96,17 @@ class SettingsManager {
     };
     
     this.currentTheme = { ...this.defaultTheme };
+    this.isApplyingTheme = false; // Prevent recursion and lag
+    
+    // Audio settings
+    this.audioSettings = {
+      crossfadeEnabled: false,
+      crossfadeDuration: 3 // seconds
+    };
+    
     this.bindEvents();
     this.initializeColorInputs();
+    this.initializeAudioSettings();
     this.loadSettings();
   }
 
@@ -113,7 +136,7 @@ class SettingsManager {
   }
 
   initializeColorInputs() {
-    // Color picker and text input synchronization
+    // Color picker and text input synchronization with debouncing
     const colorInputs = [
       { color: 'primary-bg-color', text: 'primary-bg-text', property: 'primaryBg' },
       { color: 'accent-color-picker', text: 'accent-color-text', property: 'accentColor' },
@@ -126,21 +149,70 @@ class SettingsManager {
       const textInput = document.getElementById(text);
       
       if (colorInput && textInput) {
+        // Debounced update function
+        let updateTimeout;
+        const debouncedUpdate = (value) => {
+          clearTimeout(updateTimeout);
+          updateTimeout = setTimeout(() => {
+            this.updateThemeProperty(property, value);
+          }, 100); // 100ms debounce
+        };
+
         colorInput.addEventListener('input', (e) => {
+          if (this.isApplyingTheme) return; // Prevent recursion
           const value = e.target.value;
           textInput.value = value;
-          this.updateThemeProperty(property, value);
+          debouncedUpdate(value);
         });
         
         textInput.addEventListener('input', (e) => {
+          if (this.isApplyingTheme) return; // Prevent recursion
           const value = e.target.value;
           if (this.isValidHexColor(value)) {
             colorInput.value = value;
-            this.updateThemeProperty(property, value);
+            debouncedUpdate(value);
           }
         });
       }
     });
+  }
+
+  initializeAudioSettings() {
+    const crossfadeCheckbox = document.getElementById('crossfade-enabled');
+    const crossfadeDurationSlider = document.getElementById('crossfade-duration');
+    const crossfadeDurationValue = document.getElementById('crossfade-duration-value');
+    const crossfadeDurationSetting = document.getElementById('crossfade-duration-setting');
+
+    if (crossfadeCheckbox) {
+      crossfadeCheckbox.addEventListener('change', (e) => {
+        this.audioSettings.crossfadeEnabled = e.target.checked;
+        crossfadeDurationSetting.style.display = e.target.checked ? 'block' : 'none';
+        this.saveSettings();
+        this.notifyCrossfadeChange();
+      });
+    }
+
+    if (crossfadeDurationSlider && crossfadeDurationValue) {
+      crossfadeDurationSlider.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value);
+        this.audioSettings.crossfadeDuration = value;
+        crossfadeDurationValue.textContent = `${value} second${value !== 1 ? 's' : ''}`;
+        this.saveSettings();
+        this.notifyCrossfadeChange();
+      });
+    }
+  }
+
+  notifyCrossfadeChange() {
+    // Notify audio player about crossfade settings change
+    if (window.audioPlayer && window.audioPlayer.updateCrossfadeSettings) {
+      // Map the settings to match what AudioPlayer expects
+      const crossfadeSettings = {
+        enabled: this.audioSettings.crossfadeEnabled,
+        duration: this.audioSettings.crossfadeDuration
+      };
+      window.audioPlayer.updateCrossfadeSettings(crossfadeSettings);
+    }
   }
 
   isValidHexColor(hex) {
@@ -148,31 +220,59 @@ class SettingsManager {
   }
 
   updateThemeProperty(property, value) {
+    if (this.isApplyingTheme) return; // Prevent infinite loops
+    
     this.currentTheme[property] = value;
+    this.calculateDerivedColors(); // Calculate secondary/tertiary colors
     this.applyTheme(this.currentTheme);
     this.saveSettings();
   }
 
+  calculateDerivedColors() {
+    // Auto-calculate secondary and tertiary backgrounds based on primary
+    if (this.currentTheme.primaryBg) {
+      this.currentTheme.secondaryBg = this.adjustBrightness(this.currentTheme.primaryBg, 4);
+      this.currentTheme.tertiaryBg = this.adjustBrightness(this.currentTheme.primaryBg, 10);
+      this.currentTheme.hoverBg = this.adjustBrightness(this.currentTheme.primaryBg, 16);
+    }
+    
+    // Auto-calculate border colors based on tertiary background
+    if (this.currentTheme.tertiaryBg) {
+      this.currentTheme.borderColor = this.adjustBrightness(this.currentTheme.tertiaryBg, 10);
+      this.currentTheme.borderLight = this.adjustBrightness(this.currentTheme.tertiaryBg, 20);
+    }
+  }
+
   applyTheme(theme) {
+    if (this.isApplyingTheme) return; // Prevent recursion
+    this.isApplyingTheme = true;
+    
     const root = document.documentElement;
     
-    root.style.setProperty('--primary-bg', theme.primaryBg);
-    root.style.setProperty('--secondary-bg', theme.secondaryBg);
-    root.style.setProperty('--tertiary-bg', theme.tertiaryBg);
-    root.style.setProperty('--primary-text', theme.primaryText);
-    root.style.setProperty('--secondary-text', theme.secondaryText);
-    root.style.setProperty('--accent-color', theme.accentColor);
-    root.style.setProperty('--accent-hover', this.adjustBrightness(theme.accentColor, -10));
-    root.style.setProperty('--border-color', theme.borderColor);
-    root.style.setProperty('--border-light', theme.borderLight);
-    root.style.setProperty('--hover-bg', theme.hoverBg);
-    root.style.setProperty('--success-color', theme.successColor);
-    root.style.setProperty('--error-color', theme.errorColor);
-    root.style.setProperty('--warning-color', theme.warningColor);
-    
-    // Update derived colors
-    root.style.setProperty('--progress-fill', theme.accentColor);
-    root.style.setProperty('--slider-thumb', theme.accentColor);
+    // Use requestAnimationFrame for smooth updates
+    requestAnimationFrame(() => {
+      root.style.setProperty('--primary-bg', theme.primaryBg);
+      root.style.setProperty('--secondary-bg', theme.secondaryBg);
+      root.style.setProperty('--tertiary-bg', theme.tertiaryBg);
+      root.style.setProperty('--primary-text', theme.primaryText);
+      root.style.setProperty('--secondary-text', theme.secondaryText);
+      root.style.setProperty('--accent-color', theme.accentColor);
+      root.style.setProperty('--accent-hover', this.adjustBrightness(theme.accentColor, -10));
+      root.style.setProperty('--border-color', theme.borderColor);
+      root.style.setProperty('--border-light', theme.borderLight);
+      root.style.setProperty('--hover-bg', theme.hoverBg);
+      root.style.setProperty('--success-color', theme.successColor);
+      root.style.setProperty('--error-color', theme.errorColor);
+      root.style.setProperty('--warning-color', theme.warningColor);
+      
+      // Update derived colors
+      root.style.setProperty('--progress-fill', theme.accentColor);
+      root.style.setProperty('--slider-thumb', theme.accentColor);
+      root.style.setProperty('--progress-bg', theme.tertiaryBg);
+      root.style.setProperty('--slider-track', theme.tertiaryBg);
+      
+      this.isApplyingTheme = false;
+    });
   }
 
   adjustBrightness(hex, percent) {
@@ -189,23 +289,59 @@ class SettingsManager {
   }
 
   applyPresetTheme(themeName) {
-    if (this.themes[themeName]) {
+    if (this.themes[themeName] && !this.isApplyingTheme) {
+      this.isApplyingTheme = true;
+      
+      // Update theme instantly without debouncing
       this.currentTheme = { ...this.themes[themeName] };
-      this.applyTheme(this.currentTheme);
-      this.updateColorInputsFromTheme();
-      this.saveSettings();
+      
+      // Apply theme immediately
+      const root = document.documentElement;
+      root.style.setProperty('--primary-bg', this.currentTheme.primaryBg);
+      root.style.setProperty('--secondary-bg', this.currentTheme.secondaryBg);
+      root.style.setProperty('--tertiary-bg', this.currentTheme.tertiaryBg);
+      root.style.setProperty('--primary-text', this.currentTheme.primaryText);
+      root.style.setProperty('--secondary-text', this.currentTheme.secondaryText);
+      root.style.setProperty('--accent-color', this.currentTheme.accentColor);
+      root.style.setProperty('--accent-hover', this.adjustBrightness(this.currentTheme.accentColor, -10));
+      root.style.setProperty('--border-color', this.currentTheme.borderColor);
+      root.style.setProperty('--border-light', this.currentTheme.borderLight);
+      root.style.setProperty('--hover-bg', this.currentTheme.hoverBg);
+      root.style.setProperty('--success-color', this.currentTheme.successColor);
+      root.style.setProperty('--error-color', this.currentTheme.errorColor);
+      root.style.setProperty('--warning-color', this.currentTheme.warningColor);
+      root.style.setProperty('--progress-fill', this.currentTheme.accentColor);
+      root.style.setProperty('--slider-thumb', this.currentTheme.accentColor);
+      root.style.setProperty('--progress-bg', this.currentTheme.tertiaryBg);
+      root.style.setProperty('--slider-track', this.currentTheme.tertiaryBg);
+      
+      // Update inputs after a brief delay
+      setTimeout(() => {
+        this.updateColorInputsFromTheme();
+        this.saveSettings();
+        this.isApplyingTheme = false;
+      }, 50);
     }
   }
 
   updateColorInputsFromTheme() {
-    document.getElementById('primary-bg-color').value = this.currentTheme.primaryBg;
-    document.getElementById('primary-bg-text').value = this.currentTheme.primaryBg;
-    document.getElementById('accent-color-picker').value = this.currentTheme.accentColor;
-    document.getElementById('accent-color-text').value = this.currentTheme.accentColor;
-    document.getElementById('text-color-picker').value = this.currentTheme.primaryText;
-    document.getElementById('text-color-text').value = this.currentTheme.primaryText;
-    document.getElementById('border-color-picker').value = this.currentTheme.borderColor;
-    document.getElementById('border-color-text').value = this.currentTheme.borderColor;
+    if (this.isApplyingTheme) return;
+    
+    const inputs = [
+      { color: 'primary-bg-color', text: 'primary-bg-text', value: this.currentTheme.primaryBg },
+      { color: 'accent-color-picker', text: 'accent-color-text', value: this.currentTheme.accentColor },
+      { color: 'text-color-picker', text: 'text-color-text', value: this.currentTheme.primaryText },
+      { color: 'border-color-picker', text: 'border-color-text', value: this.currentTheme.borderColor }
+    ];
+
+    inputs.forEach(({ color, text, value }) => {
+      const colorInput = document.getElementById(color);
+      const textInput = document.getElementById(text);
+      if (colorInput && textInput && value) {
+        colorInput.value = value;
+        textInput.value = value;
+      }
+    });
   }
 
   switchTab(tabName) {
@@ -246,6 +382,7 @@ class SettingsManager {
   saveSettings() {
     const settings = {
       theme: this.currentTheme,
+      audio: this.audioSettings,
       version: '1.0.0'
     };
     localStorage.setItem('music-player-settings', JSON.stringify(settings));
@@ -256,15 +393,43 @@ class SettingsManager {
       const savedSettings = localStorage.getItem('music-player-settings');
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
+        
+        // Load theme settings
         if (settings.theme) {
           this.currentTheme = { ...this.defaultTheme, ...settings.theme };
           this.applyTheme(this.currentTheme);
           this.updateColorInputsFromTheme();
         }
+        
+        // Load audio settings
+        if (settings.audio) {
+          this.audioSettings = { ...this.audioSettings, ...settings.audio };
+          this.updateAudioInputsFromSettings();
+        }
       }
     } catch (error) {
       console.error('Error loading settings:', error);
     }
+  }
+
+  updateAudioInputsFromSettings() {
+    const crossfadeCheckbox = document.getElementById('crossfade-enabled');
+    const crossfadeDurationSlider = document.getElementById('crossfade-duration');
+    const crossfadeDurationValue = document.getElementById('crossfade-duration-value');
+    const crossfadeDurationSetting = document.getElementById('crossfade-duration-setting');
+
+    if (crossfadeCheckbox) {
+      crossfadeCheckbox.checked = this.audioSettings.crossfadeEnabled;
+      crossfadeDurationSetting.style.display = this.audioSettings.crossfadeEnabled ? 'block' : 'none';
+    }
+
+    if (crossfadeDurationSlider && crossfadeDurationValue) {
+      crossfadeDurationSlider.value = this.audioSettings.crossfadeDuration;
+      crossfadeDurationValue.textContent = `${this.audioSettings.crossfadeDuration} second${this.audioSettings.crossfadeDuration !== 1 ? 's' : ''}`;
+    }
+    
+    // Notify audio player of loaded settings
+    this.notifyCrossfadeChange();
   }
 }
 

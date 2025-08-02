@@ -280,7 +280,7 @@ body {
 
 .song-list-header {
     display: grid;
-    grid-template-columns: 2fr 1.5fr 1.5fr 80px 80px;
+    grid-template-columns: 3fr 1.5fr 80px 80px;
     gap: 24px;
     padding: 16px 0;
     font-weight: 300;
@@ -299,17 +299,22 @@ body {
 
 .song-item {
     display: grid;
-    grid-template-columns: 2fr 1.5fr 1.5fr 80px 80px;
+    grid-template-columns: 3fr 1.5fr 80px 80px;
     gap: 24px;
     padding: 16px 0;
     border-bottom: 1px solid #0f0f0f;
     cursor: pointer;
     transition: all 0.2s ease;
+    align-items: center;
 }
 
 .song-item:hover {
     background: rgba(255, 255, 255, 0.02);
     padding-left: 8px;
+}
+
+.song-item:hover .song-actions .delete-btn {
+    opacity: 1;
 }
 
 .song-item.playing {
@@ -321,6 +326,60 @@ body {
 .song-item.playing .song-title {
     color: #ffffff;
     font-weight: 400;
+}
+
+.song-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.song-like {
+    font-size: 16px;
+    cursor: pointer;
+    color: #666666;
+    transition: color 0.2s ease;
+    text-align: center;
+    padding: 4px;
+    user-select: none;
+}
+
+.song-like:hover {
+    color: #e53e3e;
+}
+
+.song-like.liked {
+    color: #e53e3e;
+}
+
+.song-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.action-btn {
+    width: 20px;
+    height: 20px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--secondary-text);
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    opacity: 0;
+}
+
+.action-btn:hover {
+    background: var(--error-color);
+    border-color: var(--error-color);
+    color: white;
 }
 
 .song-title {
@@ -1373,4 +1432,36 @@ body {
     width: 18px;
     height: 18px;
     accent-color: var(--accent-color);
+}
+
+.slider-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.slider-container input[type="range"] {
+    flex: 1;
+    height: 4px;
+    background: var(--tertiary-bg);
+    outline: none;
+    border-radius: 2px;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.slider-container input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--accent-color);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.slider-container span {
+    color: var(--secondary-text);
+    font-size: 0.9rem;
+    min-width: 80px;
 }
