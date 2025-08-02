@@ -40,7 +40,7 @@ A clean, minimal desktop music player built with Electron. Echo focuses on local
 ### Setup
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/echo.git
+git clone https://github.com/Bentlybro/Echo
 cd echo
 
 # Install dependencies
