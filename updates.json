@@ -1,26 +1,34 @@
 {
-  "version": "1.0.4",
+  "version": "1.0.5",
   "releaseDate": "2025-08-02",
-  "downloadUrl": "https://cdn.bentlybro.com/Echo/Echo Setup 1.0.4.exe",
+  "downloadUrl": "https://cdn.bentlybro.com/Echo/Echo Setup 1.0.5.exe",
   "size": 87500000,
-  "checksum": "sha256:placeholder_checksum_for_1.0.4",
+  "checksum": "sha256:placeholder_checksum_for_1.0.5",
   "changelog": {
-    "summary": "Modular CSS architecture and enhanced update system",
+    "summary": "Version 1.0.5 Release",
     "changes": [
-      "NEW: Modular CSS architecture - styles organized into separate files for better maintainability",
-      "NEW: Enhanced auto-update system - now checks for updates every hour instead of daily",
-      "NEW: Separate CSS files for header, sidebar, player controls, and equalizer components",
-      "FIXED: Album art now displays full image instead of cropped thumbnails in player controls",
-      "FIXED: Progress bar styling - removed unwanted border boxes and improved appearance",
-      "FIXED: Equalizer sliders properly sized and positioned to not overlap frequency labels",
-      "IMPROVED: Better code organization with component-specific stylesheets",
-      "IMPROVED: More responsive update checking for faster delivery of new features"
+      "Version bump to 1.0.5 for release"
     ]
   },
-  "title": "Modular Architecture & Update Enhancements",
+  "title": "Version 1.0.5 Release",
   "critical": false,
   "minimumVersion": "1.0.0",
   "history": [
+    {
+      "version": "1.0.4",
+      "releaseDate": "2025-08-02",
+      "title": "Modular Architecture & Update Enhancements",
+      "changes": [
+        "NEW: Modular CSS architecture - styles organized into separate files for better maintainability",
+        "NEW: Enhanced auto-update system - now checks for updates every hour instead of daily",
+        "NEW: Separate CSS files for header, sidebar, player controls, and equalizer components",
+        "FIXED: Album art now displays full image instead of cropped thumbnails in player controls",
+        "FIXED: Progress bar styling - removed unwanted border boxes and improved appearance",
+        "FIXED: Equalizer sliders properly sized and positioned to not overlap frequency labels",
+        "IMPROVED: Better code organization with component-specific stylesheets",
+        "IMPROVED: More responsive update checking for faster delivery of new features"
+      ]
+    },
     {
       "version": "1.0.3",
       "releaseDate": "2025-08-02",

@@ -1,6 +1,6 @@
 {
   "name": "echo-music-player",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A clean, minimal desktop music player built with Electron. Features local music management, smart playback history, custom notifications, and a wireframe-inspired design.",
   "main": "main.js",
   "scripts": {
