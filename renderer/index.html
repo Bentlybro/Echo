@@ -152,6 +152,9 @@
                 <button id="like-current-btn" class="control-btn like-btn" title="Like current song">
                     <i data-lucide="heart"></i>
                 </button>
+                <button id="history-btn" class="control-btn" title="Show playback history">
+                    <i data-lucide="history"></i>
+                </button>
                 <button id="prev-btn" class="control-btn">
                     <i data-lucide="skip-back"></i>
                 </button>
@@ -400,6 +403,24 @@
         <div class="progress-stats">
             <span id="progress-text">Processing files...</span>
             <span id="progress-numbers">0 / 0</span>
+        </div>
+    </div>
+
+    <!-- Playback History Popup -->
+    <div id="history-popup" class="history-popup">
+        <div class="history-header">
+            <h3>Playback History</h3>
+            <button id="close-history-btn" class="close-btn">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+        <div class="history-content">
+            <div id="history-list" class="history-list">
+                <div class="history-empty">
+                    <i data-lucide="clock"></i>
+                    <p>No playback history yet</p>
+                </div>
+            </div>
         </div>
     </div>
 

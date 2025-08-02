@@ -1747,3 +1747,160 @@ body {
     font-size: 0.9rem;
     min-width: 80px;
 }
+
+/* Playback History Popup */
+.history-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    max-height: 500px;
+    background: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease-in-out;
+}
+
+.history-popup.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.history-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary-text);
+    margin: 0;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--secondary-text);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+    color: var(--primary-text);
+    background: var(--hover-bg);
+}
+
+.close-btn i {
+    width: 16px;
+    height: 16px;
+}
+
+.history-content {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.history-list {
+    padding: 8px 0;
+}
+
+.history-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: var(--secondary-text);
+}
+
+.history-empty i {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 8px;
+    opacity: 0.5;
+}
+
+.history-empty p {
+    font-size: 14px;
+    text-align: center;
+}
+
+.history-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-left: 3px solid transparent;
+}
+
+.history-item:hover {
+    background: var(--hover-bg);
+    border-left-color: var(--accent-color);
+}
+
+.history-item.current {
+    background: rgba(102, 126, 234, 0.1);
+    border-left-color: var(--accent-color);
+}
+
+.history-number {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--tertiary-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--secondary-text);
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.history-item.current .history-number {
+    background: var(--accent-color);
+    color: white;
+}
+
+.history-song-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.history-song-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--primary-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+}
+
+.history-song-artist {
+    font-size: 12px;
+    color: var(--secondary-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.history-time {
+    font-size: 11px;
+    color: var(--secondary-text);
+    flex-shrink: 0;
+    margin-left: 12px;
+}

@@ -12,6 +12,7 @@ class AudioPlayer {
     this.isHoveringProgress = false;
     this.queue = [];
     this.originalPlaylist = [];
+    this.playbackHistory = []; // Track actual playback order for proper previous functionality
     
     // Crossfade functionality
     this.nextAudio = null; // Second audio element for crossfading
@@ -44,6 +45,10 @@ class AudioPlayer {
     this.currentArtistEl = document.getElementById('current-artist');
     this.shuffleBtn = document.getElementById('shuffle-btn');
     this.likeCurrentBtn = document.getElementById('like-current-btn');
+    this.historyBtn = document.getElementById('history-btn');
+    this.historyPopup = document.getElementById('history-popup');
+    this.historyList = document.getElementById('history-list');
+    this.closeHistoryBtn = document.getElementById('close-history-btn');
   }
 
   createSecondAudioElement() {
@@ -79,9 +84,11 @@ class AudioPlayer {
     this.volumeBar.addEventListener('input', (e) => this.setVolume(e.target.value / 100));
     this.muteBtn.addEventListener('click', () => this.toggleMute());
     
-    // Shuffle and like controls
+    // Shuffle, like, and history controls
     this.shuffleBtn.addEventListener('click', () => this.toggleShuffle());
     this.likeCurrentBtn.addEventListener('click', () => this.toggleCurrentSongLike());
+    this.historyBtn.addEventListener('click', () => this.showHistory());
+    this.closeHistoryBtn.addEventListener('click', () => this.hideHistory());
     
     // Audio events
     this.audio.addEventListener('loadedmetadata', () => this.onLoadedMetadata());
@@ -93,7 +100,21 @@ class AudioPlayer {
     document.addEventListener('keydown', (e) => this.handleKeyboard(e));
   }
 
-  loadSong(song, playlist = [], index = -1) {
+  loadSong(song, playlist = [], index = -1, addToHistory = true) {
+    // Add current song to history before switching (but not if it's the same song)
+    if (addToHistory && this.currentSong && this.currentSong.id !== song.id) {
+      this.playbackHistory.push({
+        song: this.currentSong,
+        playlist: this.playlist,
+        index: this.currentIndex
+      });
+      
+      // Limit history to prevent memory issues (keep last 50 songs)
+      if (this.playbackHistory.length > 50) {
+        this.playbackHistory.shift();
+      }
+    }
+    
     this.currentSong = song;
     this.playlist = playlist;
     this.currentIndex = index;
@@ -217,6 +238,21 @@ class AudioPlayer {
   }
 
   previousTrack() {
+    // Check if we have playback history first
+    if (this.playbackHistory.length > 0) {
+      // Get the last song from history
+      const previousEntry = this.playbackHistory.pop();
+      
+      // Load the previous song without adding current song to history (to avoid infinite loop)
+      this.loadSong(previousEntry.song, previousEntry.playlist, previousEntry.index, false);
+      
+      if (this.isPlaying) {
+        this.play();
+      }
+      return;
+    }
+    
+    // Fallback to old behavior if no history
     if (this.playlist.length === 0) return;
     
     let newIndex;
@@ -575,8 +611,23 @@ class AudioPlayer {
     this.originalPlaylist = [...songs];
     this.playlist = [...songs];
     this.queue = []; // Clear queue when starting new playlist
+    this.playbackHistory = []; // Clear history when starting new playlist
     this.currentIndex = startIndex;
     this.loadSong(songs[startIndex], songs, startIndex);
+    this.play();
+  }
+
+  // Play a single song while preserving history
+  playSingleSong(song, playlist, index) {
+    if (!song) return;
+    
+    // Update playlist context but preserve history
+    this.originalPlaylist = [...playlist];
+    this.playlist = [...playlist];
+    this.currentIndex = index;
+    
+    // This will add current song to history before switching
+    this.loadSong(song, playlist, index, true);
     this.play();
   }
 
@@ -668,6 +719,120 @@ class AudioPlayer {
       return removed;
     }
     return null;
+  }
+
+  // History popup methods
+  showHistory() {
+    // Prevent multiple rapid clicks
+    if (this.historyPopup.classList.contains('show')) {
+      return;
+    }
+    
+    // Render first, then show
+    this.renderHistory();
+    
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(() => {
+      this.historyPopup.classList.add('show');
+      
+      // Add outside click handler after a small delay to prevent immediate closing
+      setTimeout(() => {
+        this.outsideClickHandler = this.handleHistoryOutsideClick.bind(this);
+        document.addEventListener('click', this.outsideClickHandler);
+      }, 100);
+    });
+  }
+
+  hideHistory() {
+    if (!this.historyPopup.classList.contains('show')) {
+      return;
+    }
+    
+    this.historyPopup.classList.remove('show');
+    
+    // Clean up event listener
+    if (this.outsideClickHandler) {
+      document.removeEventListener('click', this.outsideClickHandler);
+      this.outsideClickHandler = null;
+    }
+  }
+
+  handleHistoryOutsideClick(e) {
+    // Make sure the popup is still shown and the click is outside
+    if (this.historyPopup.classList.contains('show') && 
+        !this.historyPopup.contains(e.target) && 
+        !this.historyBtn.contains(e.target)) {
+      this.hideHistory();
+    }
+  }
+
+  renderHistory() {
+    const historyWithCurrent = [...this.playbackHistory];
+    
+    // Add current song at the end if it exists
+    if (this.currentSong) {
+      historyWithCurrent.push({
+        song: this.currentSong,
+        playlist: this.playlist,
+        index: this.currentIndex,
+        isCurrent: true
+      });
+    }
+
+    if (historyWithCurrent.length === 0) {
+      this.historyList.innerHTML = `
+        <div class="history-empty">
+          <i data-lucide="clock"></i>
+          <p>No playback history yet</p>
+        </div>
+      `;
+    } else {
+      // Reverse to show most recent first
+      const reversedHistory = [...historyWithCurrent].reverse();
+      
+      this.historyList.innerHTML = reversedHistory.map((entry, index) => {
+        const isCurrentSong = entry.isCurrent;
+        const timeAgo = isCurrentSong ? 'Now playing' : `${reversedHistory.length - index} song${reversedHistory.length - index === 1 ? '' : 's'} ago`;
+        
+        return `
+          <div class="history-item ${isCurrentSong ? 'current' : ''}" data-song-id="${entry.song.id}">
+            <div class="history-number">${index + 1}</div>
+            <div class="history-song-info">
+              <div class="history-song-title">${entry.song.title}</div>
+              <div class="history-song-artist">${entry.song.artist || 'Unknown Artist'}</div>
+            </div>
+            <div class="history-time">${timeAgo}</div>
+          </div>
+        `;
+      }).join('');
+
+      // Add click handlers for history items
+      this.historyList.querySelectorAll('.history-item:not(.current)').forEach(item => {
+        item.addEventListener('click', (e) => {
+          const songId = parseInt(item.dataset.songId);
+          this.playFromHistory(songId);
+          this.hideHistory();
+        });
+      });
+    }
+
+    // Re-initialize lucide icons after a short delay to ensure DOM is ready
+    setTimeout(() => {
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    }, 10);
+  }
+
+  playFromHistory(songId) {
+    // Find the song in history
+    const historyEntry = this.playbackHistory.find(entry => entry.song.id === songId);
+    if (historyEntry) {
+      // Don't modify history when playing from history - just jump to the song
+      // This preserves the full history for display
+      this.loadSong(historyEntry.song, historyEntry.playlist, historyEntry.index, false);
+      this.play();
+    }
   }
 }
 

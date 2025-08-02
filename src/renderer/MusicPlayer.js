@@ -315,7 +315,14 @@ class MusicPlayer {
     if (song) {
       const currentSongs = this.getCurrentSongs();
       const index = currentSongs.findIndex(s => s.id === songId);
-      window.audioPlayer.playPlaylist(currentSongs, index);
+      
+      // Use playSingleSong to preserve history when clicking individual songs
+      if (window.audioPlayer.currentSong) {
+        window.audioPlayer.playSingleSong(song, currentSongs, index);
+      } else {
+        // If no song is currently playing, start fresh (clear history)
+        window.audioPlayer.playPlaylist(currentSongs, index);
+      }
     }
   }
 
@@ -537,25 +544,37 @@ class MusicPlayer {
     this.contextAlbumName.textContent = song.album || 'Unknown Album';
     this.contextLikeText.textContent = song.is_liked ? 'Unlike Song' : 'Like Song';
 
-    // Position context menu
-    const rect = document.body.getBoundingClientRect();
-    const menuWidth = 200;
-    const menuHeight = 200;
+    // Temporarily show menu off-screen to measure its dimensions
+    this.contextMenu.style.left = '-9999px';
+    this.contextMenu.style.top = '-9999px';
+    this.contextMenu.classList.add('show');
+    
+    // Get actual menu dimensions
+    const menuRect = this.contextMenu.getBoundingClientRect();
+    const menuWidth = menuRect.width;
+    const menuHeight = menuRect.height;
 
     let x = e.clientX;
     let y = e.clientY;
 
-    // Adjust position if menu would go off-screen
+    // Adjust position if menu would go off-screen horizontally
     if (x + menuWidth > window.innerWidth) {
       x = window.innerWidth - menuWidth - 10;
     }
+    
+    // Adjust position if menu would go off-screen vertically
     if (y + menuHeight > window.innerHeight) {
       y = window.innerHeight - menuHeight - 10;
     }
 
+    // Ensure menu doesn't go above the top of the screen
+    if (y < 10) {
+      y = 10;
+    }
+
+    // Position the menu
     this.contextMenu.style.left = `${x}px`;
     this.contextMenu.style.top = `${y}px`;
-    this.contextMenu.classList.add('show');
   }
 
   hideContextMenu() {
