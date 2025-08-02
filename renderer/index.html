@@ -33,11 +33,20 @@
         <!-- Header -->
         <header class="header">
             <h1 class="app-title">Music Player</h1>
+            <div class="header-search">
+                <div class="search-container">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="search-input" class="search-input" placeholder="Search songs, artists, albums...">
+                    <button id="clear-search-btn" class="clear-search-btn" title="Clear search">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+            </div>
             <div class="header-controls">
                 <button id="add-music-btn" class="btn btn-secondary">Add Music</button>
                 <button id="create-playlist-btn" class="btn btn-secondary">New Playlist</button>
                 <button id="manage-folders-btn" class="btn btn-secondary">Import Folders</button>
-                <button id="settings-btn" class="btn btn-icon" title="Settings">
+                <button id="settings-btn" class="btn btn-secondary" title="Settings">
                     <i data-lucide="settings"></i>
                 </button>
             </div>
@@ -87,9 +96,6 @@
                             <span id="song-count" class="song-count">0 songs</span>
                         </div>
                         <div class="list-controls">
-                            <button id="shuffle-btn" class="btn btn-icon" title="Shuffle">
-                                <i data-lucide="shuffle"></i>
-                            </button>
                             <button id="play-all-btn" class="btn btn-primary">Play All</button>
                         </div>
                     </div>
@@ -121,6 +127,12 @@
             </div>
 
             <div class="controls">
+                <button id="shuffle-btn" class="control-btn" title="Shuffle">
+                    <i data-lucide="shuffle"></i>
+                </button>
+                <button id="like-current-btn" class="control-btn like-btn" title="Like current song">
+                    <i data-lucide="heart"></i>
+                </button>
                 <button id="prev-btn" class="control-btn">
                     <i data-lucide="skip-back"></i>
                 </button>
@@ -306,12 +318,6 @@
                                 <label>
                                     <input type="checkbox" id="minimize-to-tray">
                                     Minimize to system tray
-                                </label>
-                            </div>
-                            <div class="setting-item">
-                                <label>
-                                    <input type="checkbox" id="start-minimized">
-                                    Start minimized
                                 </label>
                             </div>
                         </div>

@@ -9,6 +9,7 @@ class AudioPlayer {
     this.isRepeat = false;
     this.volume = 1.0;
     this.currentAlbumArtUrl = null;
+    this.isHoveringProgress = false;
     
     // Crossfade functionality
     this.nextAudio = null; // Second audio element for crossfading
@@ -40,6 +41,7 @@ class AudioPlayer {
     this.currentTitleEl = document.getElementById('current-title');
     this.currentArtistEl = document.getElementById('current-artist');
     this.shuffleBtn = document.getElementById('shuffle-btn');
+    this.likeCurrentBtn = document.getElementById('like-current-btn');
   }
 
   createSecondAudioElement() {
@@ -63,11 +65,21 @@ class AudioPlayer {
     // Progress and volume
     this.progressBarContainer.addEventListener('click', (e) => this.handleProgressClick(e));
     this.progressBarContainer.addEventListener('mousemove', (e) => this.handleProgressHover(e));
+    this.progressBarContainer.addEventListener('mouseenter', () => this.isHoveringProgress = true);
+    this.progressBarContainer.addEventListener('mouseleave', () => {
+      this.isHoveringProgress = false;
+      // Reset thumb to actual progress when mouse leaves
+      if (this.audio.duration) {
+        const progress = (this.audio.currentTime / this.audio.duration) * 100;
+        this.updateProgressBar(progress);
+      }
+    });
     this.volumeBar.addEventListener('input', (e) => this.setVolume(e.target.value / 100));
     this.muteBtn.addEventListener('click', () => this.toggleMute());
     
-    // Shuffle
+    // Shuffle and like controls
     this.shuffleBtn.addEventListener('click', () => this.toggleShuffle());
+    this.likeCurrentBtn.addEventListener('click', () => this.toggleCurrentSongLike());
     
     // Audio events
     this.audio.addEventListener('loadedmetadata', () => this.onLoadedMetadata());
@@ -94,10 +106,12 @@ class AudioPlayer {
       this.currentTitleEl.textContent = this.currentSong.title;
       this.currentArtistEl.textContent = this.currentSong.artist;
       await this.updateAlbumArt();
+      this.updateLikeButtonState();
     } else {
       this.currentTitleEl.textContent = 'No song selected';
       this.currentArtistEl.textContent = '-';
       this.clearAlbumArt();
+      this.updateLikeButtonState();
     }
   }
 
@@ -261,7 +275,10 @@ class AudioPlayer {
 
   updateProgressBar(percentage) {
     this.progressBarFill.style.width = `${percentage}%`;
-    this.progressBarThumb.style.left = `${percentage}%`;
+    // Only update thumb position if not hovering (to prevent glitching)
+    if (!this.isHoveringProgress) {
+      this.progressBarThumb.style.left = `${percentage}%`;
+    }
   }
 
   setVolume(volume) {
@@ -557,6 +574,48 @@ class AudioPlayer {
 
   isCurrentlyPlaying() {
     return this.isPlaying;
+  }
+
+  async toggleCurrentSongLike() {
+    if (!this.currentSong) {
+      console.log('No current song to like');
+      return;
+    }
+
+    try {
+      // Use the music player's toggle like method if available
+      if (window.musicPlayer && typeof window.musicPlayer.toggleLikeSong === 'function') {
+        await window.musicPlayer.toggleLikeSong(this.currentSong.id);
+        // The music player will handle updating the song data
+        // We just need to update our button state
+        setTimeout(() => this.updateLikeButtonState(), 100);
+      } else {
+        // Fallback: direct API call
+        const result = await window.electronAPI.toggleLikeSong(this.currentSong.id);
+        if (result.success) {
+          // Update the current song's like status
+          this.currentSong.is_liked = result.isLiked ? 1 : 0;
+          this.updateLikeButtonState();
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling like for current song:', error);
+    }
+  }
+
+  updateLikeButtonState() {
+    if (!this.likeCurrentBtn) return;
+
+    if (this.currentSong && this.currentSong.is_liked) {
+      this.likeCurrentBtn.classList.add('btn-liked');
+      this.likeCurrentBtn.title = 'Unlike current song';
+    } else {
+      this.likeCurrentBtn.classList.remove('btn-liked');
+      this.likeCurrentBtn.title = 'Like current song';
+    }
+
+    // Enable/disable button based on whether there's a current song
+    this.likeCurrentBtn.disabled = !this.currentSong;
   }
 }
 

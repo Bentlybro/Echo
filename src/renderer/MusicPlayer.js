@@ -5,6 +5,8 @@ class MusicPlayer {
     this.playlists = [];
     this.currentView = 'all-songs';
     this.currentPlaylist = null;
+    this.searchQuery = '';
+    this.filteredSongs = [];
     
     this.initializeElements();
     this.initializeServices();
@@ -26,6 +28,8 @@ class MusicPlayer {
     this.playlistNameInput = document.getElementById('playlist-name-input');
     this.foldersModal = document.getElementById('folders-modal');
     this.watchedFoldersList = document.getElementById('watched-folders-list');
+    this.searchInput = document.getElementById('search-input');
+    this.clearSearchBtn = document.getElementById('clear-search-btn');
   }
 
   initializeServices() {
@@ -51,6 +55,10 @@ class MusicPlayer {
     this.manageFoldersBtn.addEventListener('click', () => this.folderManager.showFoldersModal());
     this.playAllBtn.addEventListener('click', () => this.playAllSongs());
     this.createPlaylistBtn.addEventListener('click', () => this.playlistManager.showPlaylistModal());
+    
+    // Search functionality
+    this.searchInput.addEventListener('input', (e) => this.handleSearch(e.target.value));
+    this.clearSearchBtn.addEventListener('click', () => this.clearSearch());
     
     document.querySelectorAll('.nav-item').forEach(item => {
       item.addEventListener('click', (e) => this.handleNavigation(e));
@@ -126,21 +134,34 @@ class MusicPlayer {
   }
 
   getCurrentSongs() {
+    let baseSongs;
     switch (this.currentView) {
       case 'all-songs':
-        return this.songs;
+        baseSongs = this.songs;
+        break;
       case 'liked-songs':
-        return this.likedSongs;
+        baseSongs = this.likedSongs;
+        break;
       case 'artists':
-        return this.songs;
+        baseSongs = this.songs;
+        break;
       case 'albums':
-        return this.songs;
+        baseSongs = this.songs;
+        break;
       default:
         if (this.currentPlaylist) {
-          return this.currentPlaylist.songs || [];
+          baseSongs = this.currentPlaylist.songs || [];
+        } else {
+          baseSongs = this.songs;
         }
-        return this.songs;
     }
+    
+    // Apply search filter if there's a search query
+    if (this.searchQuery) {
+      return this.filterSongs(baseSongs, this.searchQuery);
+    }
+    
+    return baseSongs;
   }
 
   renderCurrentView() {
@@ -303,6 +324,40 @@ class MusicPlayer {
     } catch (error) {
       console.error('Error toggling like:', error);
       this.notificationService.showNotification('Error updating song', 'error');
+    }
+  }
+
+  handleSearch(query) {
+    this.searchQuery = query.trim();
+    this.updateSearchUI();
+    this.renderCurrentView();
+  }
+
+  filterSongs(songs, query) {
+    if (!query) return songs;
+    
+    const lowerQuery = query.toLowerCase();
+    return songs.filter(song => {
+      return (
+        song.title.toLowerCase().includes(lowerQuery) ||
+        song.artist.toLowerCase().includes(lowerQuery) ||
+        song.album.toLowerCase().includes(lowerQuery)
+      );
+    });
+  }
+
+  clearSearch() {
+    this.searchInput.value = '';
+    this.searchQuery = '';
+    this.updateSearchUI();
+    this.renderCurrentView();
+  }
+
+  updateSearchUI() {
+    if (this.searchQuery) {
+      this.clearSearchBtn.classList.add('show');
+    } else {
+      this.clearSearchBtn.classList.remove('show');
     }
   }
 }
