@@ -103,10 +103,17 @@ class SettingsManager {
       crossfadeEnabled: false,
       crossfadeDuration: 3 // seconds
     };
+
+    // General settings
+    this.generalSettings = {
+      minimizeToTray: false,
+      startMinimized: false
+    };
     
     this.bindEvents();
     this.initializeColorInputs();
     this.initializeAudioSettings();
+    this.initializeGeneralSettings();
     this.loadSettings();
   }
 
@@ -383,6 +390,7 @@ class SettingsManager {
     const settings = {
       theme: this.currentTheme,
       audio: this.audioSettings,
+      general: this.generalSettings,
       version: '1.0.0'
     };
     localStorage.setItem('music-player-settings', JSON.stringify(settings));
@@ -405,6 +413,12 @@ class SettingsManager {
         if (settings.audio) {
           this.audioSettings = { ...this.audioSettings, ...settings.audio };
           this.updateAudioInputsFromSettings();
+        }
+
+        // Load general settings
+        if (settings.general) {
+          this.generalSettings = { ...this.generalSettings, ...settings.general };
+          this.updateGeneralInputsFromSettings();
         }
       }
     } catch (error) {
@@ -430,6 +444,60 @@ class SettingsManager {
     
     // Notify audio player of loaded settings
     this.notifyCrossfadeChange();
+  }
+
+  updateGeneralInputsFromSettings() {
+    const minimizeToTrayCheckbox = document.getElementById('minimize-to-tray');
+    const startMinimizedCheckbox = document.getElementById('start-minimized');
+
+    if (minimizeToTrayCheckbox) {
+      minimizeToTrayCheckbox.checked = this.generalSettings.minimizeToTray;
+    }
+
+    if (startMinimizedCheckbox) {
+      startMinimizedCheckbox.checked = this.generalSettings.startMinimized;
+    }
+
+    // Notify tray service of loaded settings
+    this.notifyTraySettingsChange();
+  }
+
+  initializeGeneralSettings() {
+    const minimizeToTrayCheckbox = document.getElementById('minimize-to-tray');
+    const startMinimizedCheckbox = document.getElementById('start-minimized');
+
+    if (minimizeToTrayCheckbox) {
+      minimizeToTrayCheckbox.addEventListener('change', (e) => {
+        this.generalSettings.minimizeToTray = e.target.checked;
+        this.saveSettings();
+        this.notifyTraySettingsChange();
+      });
+    }
+
+    if (startMinimizedCheckbox) {
+      startMinimizedCheckbox.addEventListener('change', (e) => {
+        this.generalSettings.startMinimized = e.target.checked;
+        this.saveSettings();
+      });
+    }
+
+    // Listen for settings modal open from tray
+    if (window.electronAPI && window.electronAPI.onOpenSettingsModal) {
+      window.electronAPI.onOpenSettingsModal(() => {
+        this.showSettings();
+      });
+    }
+  }
+
+  async notifyTraySettingsChange() {
+    // Notify main process about tray settings change
+    try {
+      if (window.electronAPI && window.electronAPI.updateMinimizeToTray) {
+        await window.electronAPI.updateMinimizeToTray(this.generalSettings.minimizeToTray);
+      }
+    } catch (error) {
+      console.error('Error updating minimize to tray setting:', error);
+    }
   }
 }
 

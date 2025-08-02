@@ -27,6 +27,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   removeWatchedFolder: (folderPath) => ipcRenderer.invoke('remove-watched-folder', folderPath),
   getWatchedFolders: () => ipcRenderer.invoke('get-watched-folders'),
   scanFolder: (folderPath) => ipcRenderer.invoke('scan-folder', folderPath),
+
+  // Tray operations
+  updateMinimizeToTray: (enabled) => ipcRenderer.invoke('update-minimize-to-tray', enabled),
   
   // Listen for events
   onSongAdded: (callback) => ipcRenderer.on('song-added', callback),
@@ -35,6 +38,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onBulkImportStart: (callback) => ipcRenderer.on('bulk-import-start', callback),
   onBulkImportProgress: (callback) => ipcRenderer.on('bulk-import-progress', callback),
   onBulkImportComplete: (callback) => ipcRenderer.on('bulk-import-complete', callback),
+  onOpenSettingsModal: (callback) => ipcRenderer.on('open-settings-modal', callback),
   
   // Node.js path utilities for file handling
   path: {

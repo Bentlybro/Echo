@@ -1,16 +1,18 @@
 const { ipcMain, dialog } = require('electron');
 
 class IPCHandlers {
-  constructor(database, folderWatcher, mainWindow) {
+  constructor(database, folderWatcher, mainWindow, trayService) {
     this.database = database;
     this.folderWatcher = folderWatcher;
     this.mainWindow = mainWindow;
+    this.trayService = trayService;
   }
 
   setupHandlers() {
     this.setupDatabaseHandlers();
     this.setupDialogHandlers();
     this.setupFolderHandlers();
+    this.setupTrayHandlers();
   }
 
   setupDatabaseHandlers() {
@@ -85,6 +87,18 @@ class IPCHandlers {
 
     ipcMain.handle('scan-folder', async (event, folderPath) => {
       return this.folderWatcher.scanFolder(folderPath);
+    });
+  }
+
+  setupTrayHandlers() {
+    ipcMain.handle('update-minimize-to-tray', async (event, enabled) => {
+      this.trayService.updateMinimizeToTrayEnabled(enabled);
+      return { success: true };
+    });
+
+    ipcMain.on('open-settings', () => {
+      // This is handled by the tray service to open settings from tray menu
+      this.mainWindow.webContents.send('open-settings-modal');
     });
   }
 }

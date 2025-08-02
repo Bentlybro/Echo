@@ -3,6 +3,7 @@ const Database = require('../../database/database');
 const WindowManager = require('./services/WindowManager');
 const SettingsManager = require('./services/SettingsManager');
 const FolderWatcher = require('./services/FolderWatcher');
+const TrayService = require('./services/TrayService');
 const IPCHandlers = require('./ipc/IPCHandlers');
 
 class MusicPlayerApp {
@@ -11,6 +12,7 @@ class MusicPlayerApp {
     this.settingsManager = new SettingsManager();
     this.database = null;
     this.folderWatcher = null;
+    this.trayService = null;
     this.ipcHandlers = null;
   }
 
@@ -28,6 +30,8 @@ class MusicPlayerApp {
   }
 
   setupServices() {
+    this.trayService = new TrayService(this.mainWindow, this.settingsManager);
+    
     this.folderWatcher = new FolderWatcher(
       this.database, 
       this.settingsManager, 
@@ -37,11 +41,33 @@ class MusicPlayerApp {
     this.ipcHandlers = new IPCHandlers(
       this.database, 
       this.folderWatcher, 
-      this.mainWindow
+      this.mainWindow,
+      this.trayService
     );
     
     this.folderWatcher.initialize();
     this.ipcHandlers.setupHandlers();
+    this.setupWindowEvents();
+  }
+
+  setupWindowEvents() {
+    // Handle window close event for tray functionality
+    this.mainWindow.on('close', (event) => {
+      const shouldClose = this.trayService.handleWindowClose(event);
+      if (!shouldClose) {
+        // Window was minimized to tray, don't quit the app
+        return;
+      }
+    });
+
+    // Handle minimize event
+    this.mainWindow.on('minimize', (event) => {
+      // If minimize to tray is enabled, hide to tray instead
+      if (this.trayService.isMinimizeToTrayEnabled) {
+        event.preventDefault();
+        this.trayService.hideWindow();
+      }
+    });
   }
 
   setupAppEvents() {
