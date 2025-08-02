@@ -341,6 +341,9 @@ body {
     flex-direction: column;
     background: var(--secondary-bg);
     overflow: hidden;
+    min-height: 0;
+    height: 100%;
+    position: relative;
 }
 
 /* Drop Zone */
@@ -415,6 +418,9 @@ body {
     flex-direction: column;
     padding: 32px;
     overflow: hidden;
+    min-height: 0;
+    height: 100%;
+    position: relative;
 }
 
 .list-header {
@@ -461,7 +467,14 @@ body {
 
 .song-list {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    min-height: 0;
+    max-height: calc(100vh - 400px);
+    position: relative;
+    pointer-events: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
 }
 
 .song-item {
@@ -1155,19 +1168,43 @@ body {
 
 /* Scrollbar */
 ::-webkit-scrollbar {
-    width: 4px;
+    width: 8px;
 }
 
 ::-webkit-scrollbar-track {
     background: #0a0a0a;
+    border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #1a1a1a;
+    background: #333333;
+    border-radius: 4px;
+    border: 1px solid #1a1a1a;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #333333;
+    background: #555555;
+}
+
+/* Force scrollbar to be visible */
+.song-list::-webkit-scrollbar {
+    width: 12px;
+    display: block !important;
+}
+
+.song-list::-webkit-scrollbar-track {
+    background: var(--tertiary-bg);
+    border-radius: 6px;
+}
+
+.song-list::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 6px;
+    border: 2px solid var(--tertiary-bg);
+}
+
+.song-list::-webkit-scrollbar-thumb:hover {
+    background: var(--border-light);
 }
 
 /* Watched Folders */
@@ -2540,17 +2577,19 @@ body {
 }
 
 .eq-slider {
-    writing-mode: bt-lr; /* IE */
-    -webkit-appearance: slider-vertical; /* WebKit */
-    width: 24px;
-    height: 150px;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 150px;
+    height: 24px;
     background: transparent;
     outline: none;
+    transform: rotate(-90deg);
+    transform-origin: center;
 }
 
 .eq-slider::-webkit-slider-track {
-    width: 4px;
-    height: 150px;
+    height: 4px;
+    width: 150px;
     background: var(--tertiary-bg);
     border-radius: 2px;
 }
@@ -2566,8 +2605,8 @@ body {
 }
 
 .eq-slider::-moz-range-track {
-    width: 4px;
-    height: 150px;
+    height: 4px;
+    width: 150px;
     background: var(--tertiary-bg);
     border-radius: 2px;
     border: none;
