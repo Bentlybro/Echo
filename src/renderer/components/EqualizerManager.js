@@ -4,6 +4,7 @@ class EqualizerManager {
     this.filters = [];
     this.gainNodes = [];
     this.sourceNode = null;
+    this.currentAudioElement = null;
     this.isEnabled = false;
     this.presets = this.getPresets();
     
@@ -73,13 +74,46 @@ class EqualizerManager {
     if (!this.audioContext || !audioElement) return;
 
     try {
-      // Create source from audio element
-      if (this.sourceNode) {
-        this.sourceNode.disconnect();
+      // Only create MediaElementSource if this is a new audio element
+      if (this.currentAudioElement !== audioElement) {
+        // Disconnect existing source if it exists
+        if (this.sourceNode) {
+          this.sourceNode.disconnect();
+        }
+        
+        // Create new source from audio element
+        this.sourceNode = this.audioContext.createMediaElementSource(audioElement);
+        this.currentAudioElement = audioElement;
+        
+        // Connect source through filters and gain nodes
+        this.connectAudioChain();
+        
+        console.log('Audio connected to equalizer');
+      } else {
+        // Same audio element, just ensure connections are intact
+        if (this.sourceNode && !this.sourceNode.context) {
+          // Source got disconnected somehow, reconnect the chain
+          this.connectAudioChain();
+        }
+        console.log('Audio equalizer connection verified');
       }
-      
-      this.sourceNode = this.audioContext.createMediaElementSource(audioElement);
-      
+    } catch (error) {
+      console.error('Failed to connect audio to equalizer:', error);
+      // Fallback: try to connect audio directly to destination
+      if (this.sourceNode) {
+        try {
+          this.sourceNode.connect(this.audioContext.destination);
+        } catch (fallbackError) {
+          console.error('Fallback connection also failed:', fallbackError);
+        }
+      }
+    }
+  }
+
+  connectAudioChain() {
+    if (!this.sourceNode || !this.filters.length || !this.gainNodes.length) return;
+
+    try {
       // Connect source through filters and gain nodes
       let currentNode = this.sourceNode;
       
@@ -91,11 +125,9 @@ class EqualizerManager {
       
       // Connect final output to destination
       currentNode.connect(this.audioContext.destination);
-      
-      console.log('Audio connected to equalizer');
     } catch (error) {
-      console.error('Failed to connect audio to equalizer:', error);
-      // Fallback: connect directly to destination
+      console.error('Failed to connect audio chain:', error);
+      // Try direct connection as fallback
       if (this.sourceNode) {
         this.sourceNode.connect(this.audioContext.destination);
       }
