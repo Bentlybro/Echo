@@ -1,26 +1,41 @@
 {
-  "version": "1.0.3",
+  "version": "1.0.4",
   "releaseDate": "2025-08-02",
-  "downloadUrl": "https://cdn.bentlybro.com/Echo/Echo Setup 1.0.3.exe",
-  "size": 87000000,
-  "checksum": "sha256:placeholder_checksum_for_1.0.3",
+  "downloadUrl": "https://cdn.bentlybro.com/Echo/Echo Setup 1.0.4.exe",
+  "size": 87500000,
+  "checksum": "sha256:placeholder_checksum_for_1.0.4",
   "changelog": {
-    "summary": "Offline improvements and UI enhancements",
+    "summary": "Modular CSS architecture and enhanced update system",
     "changes": [
-      "✨ NEW: Fully offline icon system - no internet required for icons",
-      "✨ NEW: 'Deselect All' option in right-click menu for song selections",
-      "🔧 Fixed song checkbox behavior - only toggles when directly clicked",
-      "🔧 Improved maximize button positioning and alignment",
-      "🔧 Enhanced sidebar spacing between icons and text",
-      "🔧 Removed redundant 'Play X Songs' option from multi-select context menu",
-      "🎨 Better visual spacing and icon consistency throughout the app",
-      "🚀 Reduced dependency on external CDNs for better offline experience"
+      "NEW: Modular CSS architecture - styles organized into separate files for better maintainability",
+      "NEW: Enhanced auto-update system - now checks for updates every hour instead of daily",
+      "NEW: Separate CSS files for header, sidebar, player controls, and equalizer components",
+      "FIXED: Album art now displays full image instead of cropped thumbnails in player controls",
+      "FIXED: Progress bar styling - removed unwanted border boxes and improved appearance",
+      "FIXED: Equalizer sliders properly sized and positioned to not overlap frequency labels",
+      "IMPROVED: Better code organization with component-specific stylesheets",
+      "IMPROVED: More responsive update checking for faster delivery of new features"
     ]
   },
-  "title": "Offline Improvements & UI Polish",
+  "title": "Modular Architecture & Update Enhancements",
   "critical": false,
   "minimumVersion": "1.0.0",
   "history": [
+    {
+      "version": "1.0.3",
+      "releaseDate": "2025-08-02",
+      "title": "Offline Improvements & UI Polish",
+      "changes": [
+        "NEW: Fully offline icon system - no internet required for icons",
+        "NEW: 'Deselect All' option in right-click menu for song selections",
+        "FIXED: Song checkbox behavior - only toggles when directly clicked",
+        "FIXED: Improved maximize button positioning and alignment",
+        "FIXED: Enhanced sidebar spacing between icons and text",
+        "FIXED: Removed redundant 'Play X Songs' option from multi-select context menu",
+        "IMPROVED: Better visual spacing and icon consistency throughout the app",
+        "IMPROVED: Reduced dependency on external CDNs for better offline experience"
+      ]
+    },
     {
       "version": "1.0.2",
       "releaseDate": "2025-08-02",

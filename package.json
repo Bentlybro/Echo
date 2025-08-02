@@ -1,13 +1,13 @@
 {
   "name": "echo-music-player",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A clean, minimal desktop music player built with Electron. Features local music management, smart playback history, custom notifications, and a wireframe-inspired design.",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "dev": "electron . --development",
     "build": "npm run clean-build && electron-builder",
-    "build:win": "npm run clean-build && electron-builder --win",
+    "build:win": "npm run clean-build && npm install rimraf && electron-builder --win",
     "build:mac": "npm run clean-build && electron-builder --mac",
     "build:linux": "npm run clean-build && electron-builder --linux",
     "pack": "electron-builder --dir",

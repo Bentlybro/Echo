@@ -11,7 +11,7 @@ class UpdateService {
     this.updateCheckUrl = 'https://cdn.bentlybro.com/Echo/updates.json'; // Replace with your CDN URL
     this.lastCheckKey = 'lastUpdateCheck';
     this.skipVersionKey = 'skipVersion';
-    this.checkInterval = 24 * 60 * 60 * 1000; // 24 hours
+    this.checkInterval = 60 * 60 * 1000; // 1 hour
     this.reminderDelay = 7 * 24 * 60 * 60 * 1000; // 7 days before asking again
     
     this.updateTimer = null;
