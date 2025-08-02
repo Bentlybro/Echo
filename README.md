@@ -41,7 +41,7 @@ A clean, minimal desktop music player built with Electron. Echo focuses on local
 ```bash
 # Clone the repository
 git clone https://github.com/Bentlybro/Echo
-cd echo
+cd echo/Echo
 
 # Install dependencies
 npm install
