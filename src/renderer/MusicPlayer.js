@@ -1,6 +1,7 @@
 class MusicPlayer {
   constructor() {
     this.songs = [];
+    this.likedSongs = [];
     this.playlists = [];
     this.currentView = 'all-songs';
     this.currentPlaylist = null;
@@ -30,6 +31,7 @@ class MusicPlayer {
   initializeServices() {
     this.notificationService = new NotificationService();
     this.progressService = new ProgressService();
+    this.settingsManager = new SettingsManager();
     this.songRenderer = new SongRenderer(this.songList, this.songCount);
     this.playlistManager = new PlaylistManager(
       this.playlistsList, 
@@ -57,6 +59,7 @@ class MusicPlayer {
 
   async loadData() {
     await this.loadSongs();
+    await this.loadLikedSongs();
     await this.loadPlaylists();
     this.renderCurrentView();
     this.setupEventListeners();
@@ -101,6 +104,16 @@ class MusicPlayer {
     }
   }
 
+  async loadLikedSongs() {
+    try {
+      this.likedSongs = await window.electronAPI.getLikedSongs();
+      console.log('Loaded liked songs:', this.likedSongs.length);
+    } catch (error) {
+      console.error('Error loading liked songs:', error);
+      this.likedSongs = [];
+    }
+  }
+
   async loadPlaylists() {
     try {
       this.playlists = await window.electronAPI.getPlaylists();
@@ -116,6 +129,8 @@ class MusicPlayer {
     switch (this.currentView) {
       case 'all-songs':
         return this.songs;
+      case 'liked-songs':
+        return this.likedSongs;
       case 'artists':
         return this.songs;
       case 'albums':
@@ -149,18 +164,25 @@ class MusicPlayer {
 
   handleNavigation(e) {
     e.preventDefault();
-    const view = e.target.dataset.view;
+    // Get the nav item element (might be the target or its parent)
+    const navItem = e.target.closest('.nav-item');
+    if (!navItem) return;
+    
+    const view = navItem.dataset.view;
     if (!view) return;
 
     this.currentView = view;
     this.currentPlaylist = null;
     
     document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-    e.target.classList.add('active');
+    navItem.classList.add('active');
     
     switch (view) {
       case 'all-songs':
         this.currentViewTitle.textContent = 'All Songs';
+        break;
+      case 'liked-songs':
+        this.currentViewTitle.textContent = 'Liked Songs';
         break;
       case 'artists':
         this.currentViewTitle.textContent = 'Artists';
@@ -256,6 +278,32 @@ class MusicPlayer {
 
   async scanFolder(folderPath) {
     await this.folderManager.scanFolder(folderPath);
+  }
+
+  async toggleLikeSong(songId) {
+    try {
+      const result = await window.electronAPI.toggleLikeSong(songId);
+      if (result.success) {
+        // Update the song in the main songs array
+        const songIndex = this.songs.findIndex(s => s.id === songId);
+        if (songIndex !== -1) {
+          this.songs[songIndex].is_liked = result.isLiked ? 1 : 0;
+          this.songs[songIndex].liked_date = result.likedDate;
+        }
+        
+        // Reload liked songs and refresh views
+        await this.loadLikedSongs();
+        this.renderCurrentView();
+        
+        const message = result.isLiked ? 'Song added to liked songs' : 'Song removed from liked songs';
+        this.notificationService.showNotification(message, 'success');
+      } else {
+        this.notificationService.showNotification('Error updating song', 'error');
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      this.notificationService.showNotification('Error updating song', 'error');
+    }
   }
 }
 

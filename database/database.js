@@ -50,10 +50,36 @@ class MusicDatabase {
       CREATE INDEX IF NOT EXISTS idx_playlist_songs_playlist ON playlist_songs(playlist_id);
     `);
 
+    // Migrate existing database to add new columns
+    this.migrateDatabase();
+
     // Create default "All Songs" playlist if it doesn't exist
     const allSongsPlaylist = this.db.prepare('SELECT id FROM playlists WHERE name = ?').get('All Songs');
     if (!allSongsPlaylist) {
       this.db.prepare('INSERT INTO playlists (name) VALUES (?)').run('All Songs');
+    }
+  }
+
+  migrateDatabase() {
+    try {
+      // Check if the is_liked column exists
+      const tableInfo = this.db.prepare("PRAGMA table_info(songs)").all();
+      const hasIsLiked = tableInfo.some(column => column.name === 'is_liked');
+      const hasLikedDate = tableInfo.some(column => column.name === 'liked_date');
+
+      if (!hasIsLiked) {
+        console.log('Adding is_liked column to songs table...');
+        this.db.exec('ALTER TABLE songs ADD COLUMN is_liked INTEGER DEFAULT 0');
+      }
+
+      if (!hasLikedDate) {
+        console.log('Adding liked_date column to songs table...');
+        this.db.exec('ALTER TABLE songs ADD COLUMN liked_date DATETIME');
+      }
+
+      console.log('Database migration completed successfully');
+    } catch (error) {
+      console.error('Error during database migration:', error);
     }
   }
 
@@ -195,6 +221,44 @@ class MusicDatabase {
       return { success: false, error: 'No album art found' };
     } catch (error) {
       return { success: false, error: error.message };
+    }
+  }
+
+  toggleLikeSong(songId) {
+    try {
+      const song = this.db.prepare('SELECT is_liked FROM songs WHERE id = ?').get(songId);
+      if (!song) {
+        return { success: false, error: 'Song not found' };
+      }
+
+      const newLikedState = song.is_liked ? 0 : 1;
+      const likedDate = newLikedState ? new Date().toISOString() : null;
+
+      this.db.prepare('UPDATE songs SET is_liked = ?, liked_date = ? WHERE id = ?')
+        .run(newLikedState, likedDate, songId);
+
+      return { 
+        success: true, 
+        isLiked: Boolean(newLikedState),
+        likedDate: likedDate
+      };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  getLikedSongs() {
+    try {
+      const songs = this.db.prepare(`
+        SELECT * FROM songs 
+        WHERE is_liked = 1 
+        ORDER BY liked_date DESC
+      `).all();
+      
+      return songs;
+    } catch (error) {
+      console.error('Error getting liked songs:', error);
+      return [];
     }
   }
 

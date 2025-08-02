@@ -41,6 +41,14 @@ class IPCHandlers {
     ipcMain.handle('get-album-art', async (event, songId) => {
       return this.database.getAlbumArt(songId);
     });
+
+    ipcMain.handle('toggle-like-song', async (event, songId) => {
+      return this.database.toggleLikeSong(songId);
+    });
+
+    ipcMain.handle('get-liked-songs', async () => {
+      return this.database.getLikedSongs();
+    });
   }
 
   setupDialogHandlers() {

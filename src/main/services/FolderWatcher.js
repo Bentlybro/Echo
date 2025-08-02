@@ -24,8 +24,9 @@ class FolderWatcher {
       
       if (settings.watchedFolders && Array.isArray(settings.watchedFolders)) {
         settings.watchedFolders.forEach(folderPath => {
-          if (fs.existsSync(folderPath)) {
-            this.addWatchedFolder(folderPath, false);
+          const normalizedPath = path.normalize(folderPath);
+          if (fs.existsSync(normalizedPath)) {
+            this.addWatchedFolder(normalizedPath, false);
           }
         });
       }
@@ -45,13 +46,16 @@ class FolderWatcher {
 
   addWatchedFolder(folderPath, saveSettings = true) {
     try {
-      if (this.watchedFolders.has(folderPath)) {
+      // Normalize the path to ensure consistent handling
+      const normalizedPath = path.normalize(folderPath);
+      
+      if (this.watchedFolders.has(normalizedPath)) {
         return { success: false, error: 'Folder is already being watched' };
       }
 
-      this.scanFolder(folderPath);
+      this.scanFolder(normalizedPath);
 
-      const watcher = chokidar.watch(folderPath, {
+      const watcher = chokidar.watch(normalizedPath, {
         ignored: /^\./,
         persistent: true,
         depth: 99,
@@ -63,14 +67,14 @@ class FolderWatcher {
         .on('unlink', (filePath) => this.handleFileRemoved(filePath))
         .on('error', (error) => console.error('Watcher error:', error));
 
-      this.watchers.set(folderPath, watcher);
-      this.watchedFolders.add(folderPath);
+      this.watchers.set(normalizedPath, watcher);
+      this.watchedFolders.add(normalizedPath);
 
       if (saveSettings) {
         this.saveWatchedFolders();
       }
 
-      console.log(`Started watching folder: ${folderPath}`);
+      console.log(`Started watching folder: ${normalizedPath}`);
       return { success: true };
     } catch (error) {
       console.error('Error adding watched folder:', error);
@@ -80,16 +84,17 @@ class FolderWatcher {
 
   removeWatchedFolder(folderPath) {
     try {
-      const watcher = this.watchers.get(folderPath);
+      const normalizedPath = path.normalize(folderPath);
+      const watcher = this.watchers.get(normalizedPath);
       if (watcher) {
         watcher.close();
-        this.watchers.delete(folderPath);
+        this.watchers.delete(normalizedPath);
       }
-      this.watchedFolders.delete(folderPath);
+      this.watchedFolders.delete(normalizedPath);
       
       this.saveWatchedFolders();
       
-      console.log(`Stopped watching folder: ${folderPath}`);
+      console.log(`Stopped watching folder: ${normalizedPath}`);
       return { success: true };
     } catch (error) {
       console.error('Error removing watched folder:', error);
@@ -99,6 +104,14 @@ class FolderWatcher {
 
   async scanFolder(folderPath) {
     try {
+      // Normalize the path to handle any encoding issues
+      const normalizedPath = path.normalize(folderPath);
+      
+      // Check if the directory exists
+      if (!fs.existsSync(normalizedPath)) {
+        return { success: false, error: `Directory does not exist: ${normalizedPath}` };
+      }
+
       const audioExtensions = ['.mp3', '.flac', '.wav', '.m4a', '.aac', '.ogg'];
       const filesToProcess = [];
 
@@ -119,7 +132,7 @@ class FolderWatcher {
         }
       };
 
-      scanDirectory(folderPath);
+      scanDirectory(normalizedPath);
       
       return await this.processBulkImport(filesToProcess, true);
     } catch (error) {

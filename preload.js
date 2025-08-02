@@ -14,6 +14,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Album art
   getAlbumArt: (songId) => ipcRenderer.invoke('get-album-art', songId),
   
+  // Liked songs
+  toggleLikeSong: (songId) => ipcRenderer.invoke('toggle-like-song', songId),
+  getLikedSongs: () => ipcRenderer.invoke('get-liked-songs'),
+  
   // File operations
   showOpenDialog: () => ipcRenderer.invoke('show-open-dialog'),
   showFolderDialog: () => ipcRenderer.invoke('show-folder-dialog'),

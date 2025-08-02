@@ -89,15 +89,39 @@ class FolderManager {
         return;
       }
 
-      this.watchedFoldersList.innerHTML = watchedFolders.map(folder => `
+      this.watchedFoldersList.innerHTML = watchedFolders.map((folder, index) => `
         <div class="folder-item">
           <div class="folder-path" title="${folder}">${folder}</div>
           <div class="folder-actions">
-            <button class="btn btn-icon btn-secondary" onclick="window.musicPlayer.scanFolder('${folder}')" title="Rescan">↻</button>
-            <button class="btn btn-icon btn-danger" onclick="window.musicPlayer.folderManager.removeWatchedFolder('${folder}')" title="Remove">×</button>
+            <button class="btn btn-icon btn-secondary" data-folder-index="${index}" data-action="scan" title="Rescan">
+              <i data-lucide="refresh-ccw"></i>
+            </button>
+            <button class="btn btn-icon btn-danger" data-folder-index="${index}" data-action="remove" title="Remove">
+              <i data-lucide="x"></i>
+            </button>
           </div>
         </div>
       `).join('');
+      
+      // Initialize Lucide icons for the new elements
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+      
+      // Add event listeners for the action buttons
+      this.watchedFoldersList.querySelectorAll('button[data-action]').forEach(button => {
+        button.addEventListener('click', (e) => {
+          const folderIndex = parseInt(e.target.closest('button').dataset.folderIndex);
+          const action = e.target.closest('button').dataset.action;
+          const folderPath = watchedFolders[folderIndex];
+          
+          if (action === 'scan') {
+            this.scanFolder(folderPath);
+          } else if (action === 'remove') {
+            this.removeWatchedFolder(folderPath);
+          }
+        });
+      });
     } catch (error) {
       console.error('Error loading watched folders:', error);
       this.notificationService.showNotification('Error loading watched folders', 'error');

@@ -23,6 +23,7 @@ class AudioPlayer {
     this.progressBarThumb = document.getElementById('progress-bar-thumb');
     this.volumeBar = document.getElementById('volume-bar');
     this.muteBtn = document.getElementById('mute-btn');
+    this.volumePercentageEl = document.getElementById('volume-percentage');
     this.currentTimeEl = document.getElementById('current-time');
     this.totalTimeEl = document.getElementById('total-time');
     this.currentTitleEl = document.getElementById('current-title');
@@ -149,7 +150,9 @@ class AudioPlayer {
     try {
       await this.audio.play();
       this.isPlaying = true;
-      this.playPauseBtn.className = 'control-btn play-btn icon-pause';
+      this.playPauseBtn.className = 'control-btn play-btn';
+      this.playPauseBtn.innerHTML = '<i data-lucide="pause"></i>';
+      lucide.createIcons();
       
       // Update play count in database
       if (this.currentSong) {
@@ -159,14 +162,18 @@ class AudioPlayer {
     } catch (error) {
       console.error('Error playing audio:', error);
       this.isPlaying = false;
-      this.playPauseBtn.className = 'control-btn play-btn icon-play';
+      this.playPauseBtn.className = 'control-btn play-btn';
+      this.playPauseBtn.innerHTML = '<i data-lucide="play"></i>';
+      lucide.createIcons();
     }
   }
 
   async pause() {
     this.audio.pause();
     this.isPlaying = false;
-    this.playPauseBtn.className = 'control-btn play-btn icon-play';
+    this.playPauseBtn.className = 'control-btn play-btn';
+    this.playPauseBtn.innerHTML = '<i data-lucide="play"></i>';
+    lucide.createIcons();
   }
 
   previousTrack() {
@@ -238,8 +245,18 @@ class AudioPlayer {
     this.volume = Math.max(0, Math.min(1, volume));
     this.audio.volume = this.volume;
     this.volumeBar.value = this.volume * 100;
+    this.volumePercentageEl.textContent = Math.round(this.volume * 100) + '%';
     
-    // Update mute button (keep icon-volume class as it's handled by CSS)
+    // Update mute button icon based on volume level
+    const muteIcon = this.muteBtn.querySelector('i');
+    if (this.volume === 0) {
+      muteIcon.setAttribute('data-lucide', 'volume-x');
+    } else if (this.volume < 0.5) {
+      muteIcon.setAttribute('data-lucide', 'volume-1');
+    } else {
+      muteIcon.setAttribute('data-lucide', 'volume-2');
+    }
+    lucide.createIcons();
   }
 
   toggleMute() {
@@ -283,7 +300,9 @@ class AudioPlayer {
   onError(error) {
     console.error('Audio error:', error);
     this.isPlaying = false;
-    this.playPauseBtn.className = 'control-btn play-btn icon-play';
+    this.playPauseBtn.className = 'control-btn play-btn';
+    this.playPauseBtn.innerHTML = '<i data-lucide="play"></i>';
+    lucide.createIcons();
     
     // Show error message to user
     const errorMsg = 'Error playing audio file. The file may be corrupted or in an unsupported format.';

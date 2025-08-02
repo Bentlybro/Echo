@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Music Player</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -14,7 +15,10 @@
             <div class="header-controls">
                 <button id="add-music-btn" class="btn btn-secondary">Add Music</button>
                 <button id="create-playlist-btn" class="btn btn-secondary">New Playlist</button>
-                <button id="manage-folders-btn" class="btn btn-primary">Import Folders</button>
+                <button id="manage-folders-btn" class="btn btn-secondary">Import Folders</button>
+                <button id="settings-btn" class="btn btn-icon" title="Settings">
+                    <i data-lucide="settings"></i>
+                </button>
             </div>
         </header>
 
@@ -26,6 +30,10 @@
                     <h3>Library</h3>
                     <ul class="sidebar-nav">
                         <li><a href="#" class="nav-item active" data-view="all-songs">All Songs</a></li>
+                        <li><a href="#" class="nav-item" data-view="liked-songs">
+                            <i data-lucide="heart"></i>
+                            Liked Songs
+                        </a></li>
                         <li><a href="#" class="nav-item" data-view="artists">Artists</a></li>
                         <li><a href="#" class="nav-item" data-view="albums">Albums</a></li>
                     </ul>
@@ -58,7 +66,9 @@
                             <span id="song-count" class="song-count">0 songs</span>
                         </div>
                         <div class="list-controls">
-                            <button id="shuffle-btn" class="btn btn-icon icon-shuffle" title="Shuffle"></button>
+                            <button id="shuffle-btn" class="btn btn-icon" title="Shuffle">
+                                <i data-lucide="shuffle"></i>
+                            </button>
                             <button id="play-all-btn" class="btn btn-primary">Play All</button>
                         </div>
                     </div>
@@ -91,9 +101,15 @@
             </div>
 
             <div class="controls">
-                <button id="prev-btn" class="control-btn icon-prev"></button>
-                <button id="play-pause-btn" class="control-btn play-btn icon-play"></button>
-                <button id="next-btn" class="control-btn icon-next"></button>
+                <button id="prev-btn" class="control-btn">
+                    <i data-lucide="skip-back"></i>
+                </button>
+                <button id="play-pause-btn" class="control-btn play-btn">
+                    <i data-lucide="play"></i>
+                </button>
+                <button id="next-btn" class="control-btn">
+                    <i data-lucide="skip-forward"></i>
+                </button>
             </div>
 
             <div class="progress-container">
@@ -108,8 +124,11 @@
             </div>
 
             <div class="volume-container">
-                <button id="mute-btn" class="control-btn icon-volume"></button>
+                <button id="mute-btn" class="control-btn">
+                    <i data-lucide="volume-2"></i>
+                </button>
                 <input type="range" id="volume-bar" class="volume-bar" min="0" max="100" value="100">
+                <span id="volume-percentage" class="volume-percentage">100%</span>
             </div>
         </footer>
     </div>
@@ -159,6 +178,131 @@
         </div>
     </div>
 
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content settings-modal-content">
+            <div class="modal-header">
+                <h3>Settings</h3>
+                <button class="modal-close" id="settings-modal-close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-tabs">
+                    <button class="settings-tab active" data-tab="appearance">
+                        <i data-lucide="palette"></i>
+                        Appearance
+                    </button>
+                    <button class="settings-tab" data-tab="playback">
+                        <i data-lucide="play"></i>
+                        Playback
+                    </button>
+                    <button class="settings-tab" data-tab="general">
+                        <i data-lucide="settings"></i>
+                        General
+                    </button>
+                </div>
+                
+                <div class="settings-content">
+                    <!-- Appearance Tab -->
+                    <div class="settings-tab-content active" data-tab-content="appearance">
+                        <div class="settings-section">
+                            <h4>Color Theme</h4>
+                            <p class="settings-description">Customize the colors of your music player</p>
+                            
+                            <div class="color-settings">
+                                <div class="color-setting">
+                                    <label for="primary-bg-color">Background</label>
+                                    <div class="color-input-group">
+                                        <input type="color" id="primary-bg-color" value="#000000">
+                                        <input type="text" id="primary-bg-text" value="#000000" maxlength="7">
+                                    </div>
+                                </div>
+                                
+                                <div class="color-setting">
+                                    <label for="accent-color">Accent Color</label>
+                                    <div class="color-input-group">
+                                        <input type="color" id="accent-color-picker" value="#667eea">
+                                        <input type="text" id="accent-color-text" value="#667eea" maxlength="7">
+                                    </div>
+                                </div>
+                                
+                                <div class="color-setting">
+                                    <label for="text-color">Text Color</label>
+                                    <div class="color-input-group">
+                                        <input type="color" id="text-color-picker" value="#ffffff">
+                                        <input type="text" id="text-color-text" value="#ffffff" maxlength="7">
+                                    </div>
+                                </div>
+                                
+                                <div class="color-setting">
+                                    <label for="border-color">Border Color</label>
+                                    <div class="color-input-group">
+                                        <input type="color" id="border-color-picker" value="#333333">
+                                        <input type="text" id="border-color-text" value="#333333" maxlength="7">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="theme-presets">
+                                <h5>Quick Themes</h5>
+                                <div class="preset-buttons">
+                                    <button class="preset-btn" data-theme="default">Default</button>
+                                    <button class="preset-btn" data-theme="dark-blue">Dark Blue</button>
+                                    <button class="preset-btn" data-theme="purple">Purple</button>
+                                    <button class="preset-btn" data-theme="green">Green</button>
+                                    <button class="preset-btn" data-theme="red">Red</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Playback Tab -->
+                    <div class="settings-tab-content" data-tab-content="playback">
+                        <div class="settings-section">
+                            <h4>Audio Settings</h4>
+                            <div class="setting-item">
+                                <label>
+                                    <input type="checkbox" id="crossfade-enabled">
+                                    Enable crossfade between tracks
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <label>
+                                    <input type="checkbox" id="gapless-playback">
+                                    Gapless playback
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- General Tab -->
+                    <div class="settings-tab-content" data-tab-content="general">
+                        <div class="settings-section">
+                            <h4>Application Settings</h4>
+                            <div class="setting-item">
+                                <label>
+                                    <input type="checkbox" id="minimize-to-tray">
+                                    Minimize to system tray
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <label>
+                                    <input type="checkbox" id="start-minimized">
+                                    Start minimized
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="reset-settings-btn" class="btn btn-secondary">Reset to Default</button>
+                <button id="close-settings-btn" class="btn btn-primary">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Notification container -->
     <div id="notification-container" class="notification-container"></div>
 
@@ -189,14 +333,19 @@
     <script src="../src/renderer/components/PlaylistManager.js"></script>
     <script src="../src/renderer/components/FolderManager.js"></script>
     <script src="../src/renderer/components/DragDropHandler.js"></script>
+    <script src="../src/renderer/components/SettingsManager.js"></script>
+    <script src="../src/renderer/components/AudioPlayer.js"></script>
     
     <!-- Main scripts -->
     <script src="../src/renderer/MusicPlayer.js"></script>
-    <script src="audio-player.js"></script>
     
     <!-- Initialize app -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Lucide icons
+            lucide.createIcons();
+            
+            // Initialize music player
             window.musicPlayer = new MusicPlayer();
         });
     </script>
