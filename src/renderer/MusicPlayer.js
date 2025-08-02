@@ -7,6 +7,7 @@ class MusicPlayer {
     this.currentPlaylist = null;
     this.searchQuery = '';
     this.filteredSongs = [];
+    this.contextMenuSong = null;
     
     this.initializeElements();
     this.initializeServices();
@@ -30,6 +31,10 @@ class MusicPlayer {
     this.watchedFoldersList = document.getElementById('watched-folders-list');
     this.searchInput = document.getElementById('search-input');
     this.clearSearchBtn = document.getElementById('clear-search-btn');
+    this.contextMenu = document.getElementById('song-context-menu');
+    this.contextArtistName = document.getElementById('context-artist-name');
+    this.contextAlbumName = document.getElementById('context-album-name');
+    this.contextLikeText = document.getElementById('context-like-text');
   }
 
   initializeServices() {
@@ -59,6 +64,9 @@ class MusicPlayer {
     // Search functionality
     this.searchInput.addEventListener('input', (e) => this.handleSearch(e.target.value));
     this.clearSearchBtn.addEventListener('click', () => this.clearSearch());
+    
+    // Context menu functionality
+    this.setupContextMenu();
     
     document.querySelectorAll('.nav-item').forEach(item => {
       item.addEventListener('click', (e) => this.handleNavigation(e));
@@ -143,10 +151,10 @@ class MusicPlayer {
         baseSongs = this.likedSongs;
         break;
       case 'artists':
-        baseSongs = this.songs;
+        baseSongs = this.getArtistViewSongs();
         break;
       case 'albums':
-        baseSongs = this.songs;
+        baseSongs = this.getAlbumViewSongs();
         break;
       default:
         if (this.currentPlaylist) {
@@ -359,6 +367,157 @@ class MusicPlayer {
     } else {
       this.clearSearchBtn.classList.remove('show');
     }
+  }
+
+  // Artists/Albums view methods
+  getArtistViewSongs() {
+    // Group songs by artist and return them in artist order
+    const artistGroups = {};
+    this.songs.forEach(song => {
+      const artist = song.artist || 'Unknown Artist';
+      if (!artistGroups[artist]) {
+        artistGroups[artist] = [];
+      }
+      artistGroups[artist].push(song);
+    });
+
+    // Sort artists alphabetically and flatten songs
+    const sortedArtists = Object.keys(artistGroups).sort();
+    const result = [];
+    sortedArtists.forEach(artist => {
+      // Sort songs within each artist by album, then by title
+      const artistSongs = artistGroups[artist].sort((a, b) => {
+        const albumCompare = (a.album || '').localeCompare(b.album || '');
+        if (albumCompare !== 0) return albumCompare;
+        return (a.title || '').localeCompare(b.title || '');
+      });
+      result.push(...artistSongs);
+    });
+
+    return result;
+  }
+
+  getAlbumViewSongs() {
+    // Group songs by album and return them in album order
+    const albumGroups = {};
+    this.songs.forEach(song => {
+      const album = song.album || 'Unknown Album';
+      if (!albumGroups[album]) {
+        albumGroups[album] = [];
+      }
+      albumGroups[album].push(song);
+    });
+
+    // Sort albums alphabetically and flatten songs
+    const sortedAlbums = Object.keys(albumGroups).sort();
+    const result = [];
+    sortedAlbums.forEach(album => {
+      // Sort songs within each album by track number if available, then by title
+      const albumSongs = albumGroups[album].sort((a, b) => {
+        return (a.title || '').localeCompare(b.title || '');
+      });
+      result.push(...albumSongs);
+    });
+
+    return result;
+  }
+
+  // Context menu methods
+  setupContextMenu() {
+    // Hide context menu when clicking elsewhere
+    document.addEventListener('click', (e) => {
+      if (!this.contextMenu.contains(e.target)) {
+        this.hideContextMenu();
+      }
+    });
+
+    // Context menu event listeners
+    document.getElementById('context-play-song').addEventListener('click', () => {
+      if (this.contextMenuSong) {
+        this.playSong(this.contextMenuSong.id);
+        this.hideContextMenu();
+      }
+    });
+
+    document.getElementById('context-search-artist').addEventListener('click', () => {
+      if (this.contextMenuSong) {
+        this.searchByArtist(this.contextMenuSong.artist);
+        this.hideContextMenu();
+      }
+    });
+
+    document.getElementById('context-search-album').addEventListener('click', () => {
+      if (this.contextMenuSong) {
+        this.searchByAlbum(this.contextMenuSong.album);
+        this.hideContextMenu();
+      }
+    });
+
+    document.getElementById('context-like-song').addEventListener('click', () => {
+      if (this.contextMenuSong) {
+        this.toggleLikeSong(this.contextMenuSong.id);
+        this.hideContextMenu();
+      }
+    });
+
+    document.getElementById('context-delete-song').addEventListener('click', () => {
+      if (this.contextMenuSong) {
+        this.deleteSong(this.contextMenuSong.id);
+        this.hideContextMenu();
+      }
+    });
+
+    // Prevent context menu from showing on right-click of context menu itself
+    this.contextMenu.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+    });
+  }
+
+  showContextMenu(e, song) {
+    e.preventDefault();
+    this.contextMenuSong = song;
+
+    // Update context menu content
+    this.contextArtistName.textContent = song.artist || 'Unknown Artist';
+    this.contextAlbumName.textContent = song.album || 'Unknown Album';
+    this.contextLikeText.textContent = song.is_liked ? 'Unlike Song' : 'Like Song';
+
+    // Position context menu
+    const rect = document.body.getBoundingClientRect();
+    const menuWidth = 200;
+    const menuHeight = 200;
+
+    let x = e.clientX;
+    let y = e.clientY;
+
+    // Adjust position if menu would go off-screen
+    if (x + menuWidth > window.innerWidth) {
+      x = window.innerWidth - menuWidth - 10;
+    }
+    if (y + menuHeight > window.innerHeight) {
+      y = window.innerHeight - menuHeight - 10;
+    }
+
+    this.contextMenu.style.left = `${x}px`;
+    this.contextMenu.style.top = `${y}px`;
+    this.contextMenu.classList.add('show');
+  }
+
+  hideContextMenu() {
+    this.contextMenu.classList.remove('show');
+    this.contextMenuSong = null;
+  }
+
+  searchByArtist(artist) {
+    if (!artist || artist === 'Unknown Artist') return;
+    this.searchInput.value = artist;
+    this.handleSearch(artist);
+  }
+
+  searchByAlbum(album) {
+    if (!album || album === 'Unknown Album') return;
+    this.searchInput.value = album;
+    this.handleSearch(album);
   }
 }
 

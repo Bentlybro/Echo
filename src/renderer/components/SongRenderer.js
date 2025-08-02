@@ -56,6 +56,16 @@ class SongRenderer {
         const songId = parseInt(item.dataset.songId);
         window.musicPlayer.playSong(songId);
       });
+
+      // Handle right-click for context menu
+      item.addEventListener('contextmenu', (e) => {
+        const songId = parseInt(item.dataset.songId);
+        const song = window.musicPlayer.songs.find(s => s.id === songId) || 
+                     window.musicPlayer.likedSongs.find(s => s.id === songId);
+        if (song) {
+          window.musicPlayer.showContextMenu(e, song);
+        }
+      });
     });
 
     // Handle clicks on song items using event delegation
