@@ -8,6 +8,27 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
 <body>
+    <!-- Custom Title Bar -->
+    <div class="title-bar">
+        <div class="title-bar-drag-region">
+            <div class="title-bar-title">
+                <i data-lucide="music" class="title-bar-icon"></i>
+                <span class="title-text">Music Player</span>
+            </div>
+        </div>
+        <div class="title-bar-controls">
+            <button class="title-bar-btn" id="minimize-btn" title="Minimize">
+                <i data-lucide="minus"></i>
+            </button>
+            <button class="title-bar-btn" id="maximize-btn" title="Maximize">
+                <i data-lucide="square"></i>
+            </button>
+            <button class="title-bar-btn close-btn" id="close-btn" title="Close">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+    </div>
+    
     <div class="app-container">
         <!-- Header -->
         <header class="header">
@@ -330,6 +351,7 @@
     <script src="../src/renderer/services/ProgressService.js"></script>
     
     <!-- Component scripts -->
+    <script src="../src/renderer/components/TitleBarManager.js"></script>
     <script src="../src/renderer/components/SongRenderer.js"></script>
     <script src="../src/renderer/components/PlaylistManager.js"></script>
     <script src="../src/renderer/components/FolderManager.js"></script>
@@ -345,6 +367,9 @@
         document.addEventListener('DOMContentLoaded', () => {
             // Initialize Lucide icons
             lucide.createIcons();
+            
+            // Initialize title bar
+            window.titleBarManager = new TitleBarManager();
             
             // Initialize music player
             window.musicPlayer = new MusicPlayer();

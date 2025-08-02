@@ -31,6 +31,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Tray operations
   updateMinimizeToTray: (enabled) => ipcRenderer.invoke('update-minimize-to-tray', enabled),
   
+  // Window operations
+  windowMinimize: () => ipcRenderer.invoke('window-minimize'),
+  windowMaximize: () => ipcRenderer.invoke('window-maximize'),
+  windowClose: () => ipcRenderer.invoke('window-close'),
+  windowIsMaximized: () => ipcRenderer.invoke('window-is-maximized'),
+  
   // Listen for events
   onSongAdded: (callback) => ipcRenderer.on('song-added', callback),
   onSongsBatchAdded: (callback) => ipcRenderer.on('songs-batch-added', callback),

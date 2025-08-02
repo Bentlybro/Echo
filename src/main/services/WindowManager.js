@@ -17,7 +17,8 @@ class WindowManager {
         contextIsolation: true,
         preload: path.join(__dirname, '..', '..', '..', 'preload.js')
       },
-      titleBarStyle: 'default',
+      frame: false,
+      titleBarStyle: 'hidden',
       show: false
     });
 

@@ -13,6 +13,7 @@ class IPCHandlers {
     this.setupDialogHandlers();
     this.setupFolderHandlers();
     this.setupTrayHandlers();
+    this.setupWindowHandlers();
   }
 
   setupDatabaseHandlers() {
@@ -99,6 +100,29 @@ class IPCHandlers {
     ipcMain.on('open-settings', () => {
       // This is handled by the tray service to open settings from tray menu
       this.mainWindow.webContents.send('open-settings-modal');
+    });
+  }
+
+  setupWindowHandlers() {
+    ipcMain.handle('window-minimize', () => {
+      this.mainWindow.minimize();
+    });
+
+    ipcMain.handle('window-maximize', () => {
+      if (this.mainWindow.isMaximized()) {
+        this.mainWindow.unmaximize();
+      } else {
+        this.mainWindow.maximize();
+      }
+      return this.mainWindow.isMaximized();
+    });
+
+    ipcMain.handle('window-close', () => {
+      this.mainWindow.close();
+    });
+
+    ipcMain.handle('window-is-maximized', () => {
+      return this.mainWindow.isMaximized();
     });
   }
 }

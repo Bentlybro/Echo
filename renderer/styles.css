@@ -46,11 +46,87 @@ body {
     line-height: 1.4;
 }
 
+/* Custom Title Bar */
+.title-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 30px;
+    background: var(--secondary-bg);
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+    z-index: 1000;
+}
+
+.title-bar-drag-region {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    -webkit-app-region: drag;
+    padding-left: 10px;
+}
+
+.title-bar-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--primary-text);
+}
+
+.title-bar-icon {
+    width: 14px;
+    height: 14px;
+    color: var(--accent-color);
+}
+
+.title-text {
+    user-select: none;
+}
+
+.title-bar-controls {
+    display: flex;
+    height: 100%;
+    -webkit-app-region: no-drag;
+}
+
+.title-bar-btn {
+    width: 46px;
+    height: 100%;
+    border: none;
+    background: transparent;
+    color: var(--secondary-text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    font-size: 12px;
+    outline: none;
+}
+
+.title-bar-btn:hover {
+    background: var(--hover-bg);
+    color: var(--primary-text);
+}
+
+.title-bar-btn.close-btn:hover {
+    background: #e74c3c;
+    color: white;
+}
+
+.title-bar-btn i {
+    width: 12px;
+    height: 12px;
+}
+
 /* App Container */
 .app-container {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: calc(100vh - 30px); /* Account for title bar */
     background: var(--secondary-bg);
     border: 1px solid var(--tertiary-bg);
     overflow: hidden;
