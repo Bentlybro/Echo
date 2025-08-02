@@ -2,6 +2,8 @@
 
 A clean, minimal desktop music player built with Electron. Echo focuses on local music management with an elegant wireframe-inspired interface.
 
+<img width="1804" height="974" alt="image" src="https://github.com/user-attachments/assets/f83cda6b-b3fe-48e1-92e5-4832b5939ee0" />
+
 ## Features
 
 ### Core Functionality
