@@ -1,154 +1,143 @@
-# Simple Music Player
+# Echo
 
-A cross-platform desktop music player built with Electron. Features drag-and-drop support, playlist management, and a clean, minimalist interface.
+A clean, minimal desktop music player built with Electron. Echo focuses on local music management with an elegant wireframe-inspired interface.
 
 ## Features
 
-✨ **Core Functionality**
-- Play local audio files (MP3, FLAC, WAV, M4A, AAC, OGG)
-- Drag and drop files to add to library
-- Automatic metadata extraction (title, artist, album, duration)
-- Audio playback controls (play, pause, skip, volume)
-- Progress seeking and time display
+### Core Functionality
+- **Local Music Library** - Import and organize your music files locally
+- **Smart Playback History** - Navigate through previously played songs with intelligent history tracking
+- **Queue Management** - Add songs to queue or play next with right-click context menus
+- **Search & Filter** - Real-time search across songs, artists, and albums
+- **Playlist Management** - Create and manage custom playlists
 
-🎵 **Music Management**
-- SQLite database for persistent music library
-- Create and manage custom playlists
-- Browse by all songs, artists, or albums
-- Search and organize your music collection
+### Audio Controls
+- **Standard Playback** - Play, pause, skip, previous with keyboard shortcuts
+- **Shuffle & Repeat** - Randomize playback or repeat current track
+- **Volume Control** - Smooth volume adjustment with visual feedback
+- **Progress Seeking** - Click anywhere on the progress bar to jump to that position
 
-🎨 **User Interface**
-- Clean, modern design with gradient backgrounds
-- Responsive layout that works on different screen sizes
-- Keyboard shortcuts for playback control
-- Real-time progress and volume controls
+### Smart Features
+- **Custom Notifications** - Clean overlay notifications when window is minimized
+- **Folder Watching** - Automatically detect new music files in watched directories
+- **Recently Played** - Auto-generated smart playlist of recent tracks
+- **Most Played** - Track and display your most frequently played songs
+- **Media Key Support** - Control playback with system media keys
 
-⚡ **Technical Features**
-- Cross-platform support (Windows, macOS, Linux)
-- Secure IPC communication between main and renderer processes
-- Efficient database operations with Better-SQLite3
-- Music metadata parsing with music-metadata library
+### Interface
+- **Wireframe Design** - Clean, minimal interface with subtle borders and typography
+- **Dark Theme** - Easy on the eyes with carefully chosen color palette
+- **Context Menus** - Right-click songs for quick actions and navigation
+- **System Tray** - Minimize to system tray for background playback
+- **Responsive Layout** - Adapts to different window sizes
 
 ## Installation
 
-1. **Prerequisites**
-   - Node.js (v16 or higher)
-   - npm (comes with Node.js)
+### Prerequisites
+- Node.js (v16 or higher)
+- npm or yarn
 
-2. **Install Dependencies**
-   ```bash
-   npm install
-   ```
+### Setup
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/echo.git
+cd echo
 
-3. **Start the Application**
-   ```bash
-   npm start
-   ```
+# Install dependencies
+npm install
 
-4. **Development Mode** (with DevTools)
-   ```bash
-   npm run dev
-   ```
+# Start the application
+npm start
+```
+
+### Build
+```bash
+# Build for your current platform
+npm run build
+
+# Build for specific platforms
+npm run build:win
+npm run build:mac
+npm run build:linux
+```
 
 ## Usage
 
-### Adding Music
-- **Method 1**: Click the "Add Music" button and select audio files
-- **Method 2**: Drag and drop audio files anywhere in the application
-- **Method 3**: Use the file menu to browse and add songs
-
-### Playback Controls
-- **Play/Pause**: Click the play button or press `Space`
-- **Next Track**: Click next button or press `→`
-- **Previous Track**: Click previous button or press `←`
-- **Volume**: Use volume slider or press `↑`/`↓`
-- **Seek**: Click anywhere on the progress bar
-
-### Playlist Management
-1. Click "New Playlist" to create a playlist
-2. Navigate between "All Songs" and your custom playlists
-3. Double-click any song to start playing
-4. Use "Play All" to play the current view
+### Getting Started
+1. Launch Echo
+2. Click "Add Music" or "Import Folders" to add your music library
+3. Use the search bar to find specific tracks
+4. Click any song to start playing
 
 ### Keyboard Shortcuts
 - `Space` - Play/Pause
-- `←` - Previous track
-- `→` - Next track
-- `↑` - Volume up
-- `↓` - Volume down
+- `Left Arrow` - Previous track
+- `Right Arrow` - Next track
+- `Up Arrow` - Volume up
+- `Down Arrow` - Volume down
 
-## Project Structure
-
-```
-Music/
-├── package.json          # Project configuration and dependencies
-├── main.js              # Electron main process
-├── preload.js           # Secure IPC bridge
-├── database/
-│   ├── database.js      # Database manager class
-│   └── music.db         # SQLite database (created at runtime)
-├── renderer/
-│   ├── index.html       # Main application UI
-│   ├── styles.css       # Application styling
-│   ├── script.js        # Main application logic
-│   └── audio-player.js  # Audio playback engine
-└── README.md           # This file
-```
+### Right-Click Actions
+- **Play Song** - Start playing immediately
+- **Play Next** - Add to front of queue
+- **Add to Queue** - Add to end of queue
+- **Search by Artist** - Filter by the song's artist
+- **Search by Album** - Filter by the song's album
+- **Like/Unlike** - Add to or remove from liked songs
+- **Delete** - Remove from library
 
 ## Technology Stack
 
-- **Framework**: Electron (cross-platform desktop apps)
-- **Database**: Better-SQLite3 (fast, synchronous SQLite)
-- **Metadata**: music-metadata (audio file parsing)
-- **UI**: Vanilla HTML/CSS/JavaScript with modern styling
-- **Audio**: HTML5 Audio API with custom controls
+- **Electron** - Cross-platform desktop framework
+- **Better-SQLite3** - Local database for music metadata
+- **Node.js** - Backend runtime
+- **HTML/CSS/JavaScript** - Frontend interface
+- **Lucide Icons** - Clean, minimal iconography
 
-## Building for Distribution
+## Architecture
 
-1. **Pack (development)**
-   ```bash
-   npm run pack
-   ```
+### Main Process
+- **Database Management** - SQLite database for music metadata and playlists
+- **File System Operations** - Music file importing and folder watching
+- **IPC Handlers** - Communication between main and renderer processes
+- **System Integration** - Media keys, notifications, and tray functionality
 
-2. **Build (production)**
-   ```bash
-   npm run build
-   ```
+### Renderer Process
+- **Audio Player** - Core playback engine with crossfade support
+- **UI Components** - Modular interface components
+- **Music Library** - Song list rendering and management
+- **Search & Navigation** - Real-time filtering and view switching
 
-Built applications will be available in the `dist/` directory.
+## File Structure
 
-## Supported File Formats
-
-- **MP3** - Most common format, excellent compatibility
-- **FLAC** - Lossless compression, audiophile quality
-- **WAV** - Uncompressed, highest quality
-- **M4A** - Apple's format, good quality and compression
-- **AAC** - Modern codec with good compression
-- **OGG** - Open source alternative to MP3
-
-## Troubleshooting
-
-### Native Module Issues
-If you encounter module compilation errors:
-```bash
-npm rebuild
 ```
-
-### Database Issues
-If you experience database problems:
-1. Close the application
-2. Delete `database/music.db`
-3. Restart the application (database will be recreated)
-
-### Audio Playback Issues
-- Ensure your audio files are not corrupted
-- Check that the file format is supported
-- Try converting problematic files to MP3
+echo/
+├── src/
+│   ├── main/               # Main process
+│   │   ├── services/       # Core services
+│   │   └── ipc/           # IPC handlers
+│   ├── renderer/          # Renderer process
+│   │   ├── components/    # UI components
+│   │   └── services/      # Frontend services
+│   └── overlay/           # Notification overlay
+├── database/              # Database schema and operations
+├── renderer/              # Main UI files
+└── package.json
+```
 
 ## Contributing
 
-This is a simple music player designed for personal use. Feel free to modify and extend it for your needs!
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-MIT License - feel free to use and modify as needed.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Built with Electron for cross-platform compatibility
+- Icons provided by Lucide
+- Inspired by minimal design principles and modern music players
