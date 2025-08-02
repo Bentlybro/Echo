@@ -1,12 +1,13 @@
-const { ipcMain, dialog, Notification } = require('electron');
+const { ipcMain, dialog, Notification, app } = require('electron');
 
 class IPCHandlers {
-  constructor(database, folderWatcher, mainWindow, trayService, overlayService) {
+  constructor(database, folderWatcher, mainWindow, trayService, overlayService, updateService) {
     this.database = database;
     this.folderWatcher = folderWatcher;
     this.mainWindow = mainWindow;
     this.trayService = trayService;
     this.overlayService = overlayService;
+    this.updateService = updateService;
   }
 
   setupHandlers() {
@@ -17,6 +18,7 @@ class IPCHandlers {
     this.setupWindowHandlers();
     this.setupMediaHandlers();
     this.setupNotificationHandlers();
+    this.setupUpdateHandlers();
   }
 
   setupDatabaseHandlers() {
@@ -54,6 +56,14 @@ class IPCHandlers {
 
     ipcMain.handle('get-liked-songs', async () => {
       return this.database.getLikedSongs();
+    });
+
+    ipcMain.handle('delete-playlist', async (event, playlistId) => {
+      return this.database.deletePlaylist(playlistId);
+    });
+
+    ipcMain.handle('rename-playlist', async (event, playlistId, newName) => {
+      return this.database.renamePlaylist(playlistId, newName);
     });
   }
 
@@ -217,6 +227,42 @@ class IPCHandlers {
       } catch (error) {
         console.error('Error getting smart playlists:', error);
         return { recentlyAdded: [], mostPlayed: [] };
+      }
+    });
+  }
+
+  setupUpdateHandlers() {
+    ipcMain.handle('get-app-version', () => {
+      return { version: app.getVersion() };
+    });
+    
+    ipcMain.handle('check-for-updates', async () => {
+      try {
+        await this.updateService.checkForUpdates(false);
+        return { success: true };
+      } catch (error) {
+        console.error('Error checking for updates:', error);
+        return { success: false, error: error.message };
+      }
+    });
+
+    ipcMain.handle('handle-update-decision', async (event, decision, updateInfo) => {
+      try {
+        await this.updateService.handleUpdateDecision(decision, updateInfo);
+        return { success: true };
+      } catch (error) {
+        console.error('Error handling update decision:', error);
+        return { success: false, error: error.message };
+      }
+    });
+
+    ipcMain.handle('request-update-history', async () => {
+      try {
+        await this.updateService.showUpdateHistory();
+        return { success: true };
+      } catch (error) {
+        console.error('Error requesting update history:', error);
+        return { success: false, error: error.message };
       }
     });
   }

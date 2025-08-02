@@ -28,7 +28,8 @@ class WindowManager {
       this.mainWindow.show();
     });
 
-    if (process.argv.includes('--development')) {
+    // Open dev tools in development or for debugging production issues
+    if (process.argv.includes('--development') || process.argv.includes('--debug')) {
       this.mainWindow.webContents.openDevTools();
     }
 

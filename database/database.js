@@ -1,13 +1,44 @@
 const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
+const { app } = require('electron');
 const { parseFile } = require('music-metadata');
 
 class MusicDatabase {
   constructor() {
-    const dbPath = path.join(__dirname, 'music.db');
-    this.db = new Database(dbPath);
-    this.init();
+    try {
+      // Use userData directory instead of app directory for production
+      const userDataPath = app.getPath('userData');
+      console.log('Initializing database in userData path:', userDataPath);
+      
+      // Ensure the directory exists
+      if (!fs.existsSync(userDataPath)) {
+        console.log('Creating userData directory...');
+        fs.mkdirSync(userDataPath, { recursive: true });
+      }
+      
+      const dbPath = path.join(userDataPath, 'music.db');
+      console.log('Database path:', dbPath);
+      
+      // Check if better-sqlite3 is available
+      console.log('Attempting to initialize SQLite database...');
+      this.db = new Database(dbPath);
+      console.log('Database initialized successfully');
+      
+      this.init();
+      console.log('Database tables created/verified');
+      
+    } catch (error) {
+      console.error('Critical error initializing database:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
+      
+      // Re-throw the error so the app can handle it gracefully
+      throw new Error(`Database initialization failed: ${error.message}`);
+    }
   }
 
   init() {
@@ -97,7 +128,7 @@ class MusicDatabase {
       // Check if song already exists
       const existingSong = this.db.prepare('SELECT id FROM songs WHERE file_path = ?').get(filePath);
       if (existingSong) {
-        return { success: false, error: 'Song already exists in library' };
+        return { success: false, duplicate: true };
       }
 
       // Extract metadata
@@ -332,6 +363,38 @@ class MusicDatabase {
     } catch (error) {
       console.error('Error getting most played:', error);
       return [];
+    }
+  }
+
+  deletePlaylist(playlistId) {
+    try {
+      // Don't allow deleting the "All Songs" playlist
+      const playlist = this.db.prepare('SELECT name FROM playlists WHERE id = ?').get(playlistId);
+      if (playlist && playlist.name === 'All Songs') {
+        return { success: false, error: 'Cannot delete the All Songs playlist' };
+      }
+      
+      const result = this.db.prepare('DELETE FROM playlists WHERE id = ?').run(playlistId);
+      return { success: true, changes: result.changes };
+    } catch (error) {
+      console.error('Error deleting playlist:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  renamePlaylist(playlistId, newName) {
+    try {
+      // Don't allow renaming the "All Songs" playlist
+      const playlist = this.db.prepare('SELECT name FROM playlists WHERE id = ?').get(playlistId);
+      if (playlist && playlist.name === 'All Songs') {
+        return { success: false, error: 'Cannot rename the All Songs playlist' };
+      }
+      
+      const result = this.db.prepare('UPDATE playlists SET name = ? WHERE id = ?').run(newName, playlistId);
+      return { success: true, changes: result.changes };
+    } catch (error) {
+      console.error('Error renaming playlist:', error);
+      return { success: false, error: error.message };
     }
   }
 

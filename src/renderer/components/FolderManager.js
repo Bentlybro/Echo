@@ -12,6 +12,7 @@ class FolderManager {
     document.getElementById('close-folders-btn').addEventListener('click', () => this.hideFoldersModal());
     document.getElementById('add-folder-from-modal-btn').addEventListener('click', () => this.showFolderDialog());
     
+    
     this.foldersModal.addEventListener('click', (e) => {
       if (e.target === this.foldersModal) {
         this.hideFoldersModal();
@@ -104,8 +105,8 @@ class FolderManager {
       `).join('');
       
       // Initialize Lucide icons for the new elements
-      if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
+      if (typeof window.localIcons !== 'undefined') {
+        window.localIcons.createIcons();
       }
       
       // Add event listeners for the action buttons
@@ -145,6 +146,7 @@ class FolderManager {
       this.notificationService.showNotification('Error scanning folder', 'error');
     }
   }
+
 }
 
 if (typeof module !== 'undefined' && module.exports) {

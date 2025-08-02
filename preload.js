@@ -1,5 +1,10 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+// Add error handling for preload script
+process.on('uncaughtException', (error) => {
+  console.error('Preload uncaught exception:', error);
+});
+
 contextBridge.exposeInMainWorld('electronAPI', {
   // Database operations
   getAllSongs: () => ipcRenderer.invoke('get-all-songs'),
@@ -10,6 +15,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getPlaylists: () => ipcRenderer.invoke('get-playlists'),
   createPlaylist: (name) => ipcRenderer.invoke('create-playlist', name),
   addSongToPlaylist: (playlistId, songId) => ipcRenderer.invoke('add-song-to-playlist', playlistId, songId),
+  deletePlaylist: (playlistId) => ipcRenderer.invoke('delete-playlist', playlistId),
+  renamePlaylist: (playlistId, newName) => ipcRenderer.invoke('rename-playlist', playlistId, newName),
   
   // Album art
   getAlbumArt: (songId) => ipcRenderer.invoke('get-album-art', songId),
@@ -63,6 +70,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onMediaKeyPlayPause: (callback) => ipcRenderer.on('media-key-play-pause', callback),
   onMediaKeyNext: (callback) => ipcRenderer.on('media-key-next', callback),
   onMediaKeyPrevious: (callback) => ipcRenderer.on('media-key-previous', callback),
+  
+  // Update system
+  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  handleUpdateDecision: (decision, updateInfo) => ipcRenderer.invoke('handle-update-decision', decision, updateInfo),
+  requestUpdateHistory: () => ipcRenderer.invoke('request-update-history'),
+  
+  // Update event listeners
+  onUpdateNotification: (callback) => ipcRenderer.on('show-update-notification', callback),
+  onUpdateHistory: (callback) => ipcRenderer.on('show-update-history', callback),
+  onUpdateDownloadStarted: (callback) => ipcRenderer.on('update-download-started', callback),
+  onUpdateDownloadProgress: (callback) => ipcRenderer.on('update-download-progress', callback),
+  onUpdateDownloadError: (callback) => ipcRenderer.on('update-download-error', callback),
   
   // Node.js path utilities for file handling
   path: {

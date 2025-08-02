@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Echo</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="../assets/icons/icon-loader.js"></script>
 </head>
 <body>
     <!-- Custom Title Bar -->
@@ -68,8 +68,10 @@
                             <i data-lucide="clock"></i>
                             Recently Played
                         </a></li>
-                        <li><a href="#" class="nav-item" data-view="artists">Artists</a></li>
-                        <li><a href="#" class="nav-item" data-view="albums">Albums</a></li>
+                        <li><a href="#" class="nav-item" data-view="equalizer">
+                            <i data-lucide="sliders"></i>
+                            Equalizer
+                        </a></li>
                     </ul>
                 </div>
                 
@@ -79,10 +81,6 @@
                         <li><a href="#" class="nav-item" data-view="recently-added">
                             <i data-lucide="plus-circle"></i>
                             Recently Added
-                        </a></li>
-                        <li><a href="#" class="nav-item" data-view="most-played">
-                            <i data-lucide="trending-up"></i>
-                            Most Played
                         </a></li>
                     </ul>
                 </div>
@@ -119,6 +117,7 @@
                     </div>
                     
                     <div class="song-list-header">
+                        <span class="col-select"></span>
                         <span class="col-thumbnail"></span>
                         <span class="col-info">Song</span>
                         <span class="col-album">Album</span>
@@ -128,6 +127,92 @@
                     
                     <div id="song-list" class="song-list">
                         <!-- Songs will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Equalizer & Stats Page -->
+                <div id="equalizer-container" class="equalizer-container" style="display: none;">
+                    <div class="eq-header">
+                        <h2>Equalizer</h2>
+                        <p>Customize your audio experience</p>
+                    </div>
+
+                    <div class="eq-content">
+                        <div class="eq-section">
+                            <h3>Equalizer</h3>
+                            <div class="eq-controls">
+                                <div class="eq-presets">
+                                    <select id="eq-preset" class="eq-preset-selector">
+                                        <option value="flat">Flat</option>
+                                        <option value="rock">Rock</option>
+                                        <option value="pop">Pop</option>
+                                        <option value="jazz">Jazz</option>
+                                        <option value="classical">Classical</option>
+                                        <option value="electronic">Electronic</option>
+                                        <option value="bass-boost">Bass Boost</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="eq-sliders">
+                                    <div class="eq-band">
+                                        <label>60Hz</label>
+                                        <input type="range" class="eq-slider" id="eq-60" min="-20" max="20" value="0" step="1">
+                                        <span class="eq-value">0dB</span>
+                                    </div>
+                                    <div class="eq-band">
+                                        <label>170Hz</label>
+                                        <input type="range" class="eq-slider" id="eq-170" min="-20" max="20" value="0" step="1">
+                                        <span class="eq-value">0dB</span>
+                                    </div>
+                                    <div class="eq-band">
+                                        <label>310Hz</label>
+                                        <input type="range" class="eq-slider" id="eq-310" min="-20" max="20" value="0" step="1">
+                                        <span class="eq-value">0dB</span>
+                                    </div>
+                                    <div class="eq-band">
+                                        <label>600Hz</label>
+                                        <input type="range" class="eq-slider" id="eq-600" min="-20" max="20" value="0" step="1">
+                                        <span class="eq-value">0dB</span>
+                                    </div>
+                                    <div class="eq-band">
+                                        <label>1kHz</label>
+                                        <input type="range" class="eq-slider" id="eq-1000" min="-20" max="20" value="0" step="1">
+                                        <span class="eq-value">0dB</span>
+                                    </div>
+                                    <div class="eq-band">
+                                        <label>3kHz</label>
+                                        <input type="range" class="eq-slider" id="eq-3000" min="-20" max="20" value="0" step="1">
+                                        <span class="eq-value">0dB</span>
+                                    </div>
+                                    <div class="eq-band">
+                                        <label>6kHz</label>
+                                        <input type="range" class="eq-slider" id="eq-6000" min="-20" max="20" value="0" step="1">
+                                        <span class="eq-value">0dB</span>
+                                    </div>
+                                    <div class="eq-band">
+                                        <label>12kHz</label>
+                                        <input type="range" class="eq-slider" id="eq-12000" min="-20" max="20" value="0" step="1">
+                                        <span class="eq-value">0dB</span>
+                                    </div>
+                                    <div class="eq-band">
+                                        <label>14kHz</label>
+                                        <input type="range" class="eq-slider" id="eq-14000" min="-20" max="20" value="0" step="1">
+                                        <span class="eq-value">0dB</span>
+                                    </div>
+                                    <div class="eq-band">
+                                        <label>16kHz</label>
+                                        <input type="range" class="eq-slider" id="eq-6000" min="-20" max="20" value="0" step="1">
+                                        <span class="eq-value">0dB</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="eq-actions">
+                                    <button id="eq-reset" class="btn btn-secondary">Reset</button>
+                                    <button id="eq-enable" class="btn btn-primary">Enable EQ</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </main>
@@ -343,6 +428,28 @@
                                 </label>
                             </div>
                         </div>
+                        
+                        <div class="settings-section">
+                            <h4>About</h4>
+                            <div class="setting-item">
+                                <p><strong>Echo Music Player</strong></p>
+                                <p>Version: <span id="app-version">Loading...</span></p>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section">
+                            <h4>Updates</h4>
+                            <div class="setting-item">
+                                <button id="check-updates-btn" class="btn btn-secondary">
+                                    <i data-lucide="download"></i>
+                                    Check for Updates
+                                </button>
+                                <button id="show-update-history-btn" class="btn btn-secondary">
+                                    <i data-lucide="clock"></i>
+                                    Update History
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -355,36 +462,95 @@
 
     <!-- Context Menu -->
     <div id="song-context-menu" class="context-menu">
-        <div class="context-menu-item" id="context-play-song">
-            <i data-lucide="play"></i>
-            Play Song
+        <!-- Single song options -->
+        <div class="single-song-options">
+            <div class="context-menu-item" id="context-play-song">
+                <i data-lucide="play"></i>
+                <span id="context-play-text">Play Song</span>
+            </div>
+            <div class="context-menu-separator"></div>
+            <div class="context-menu-item" id="context-play-next">
+                <i data-lucide="skip-forward"></i>
+                <span id="context-play-next-text">Play Next</span>
+            </div>
+            <div class="context-menu-item" id="context-add-to-queue">
+                <i data-lucide="list-plus"></i>
+                <span id="context-add-queue-text">Add to Queue</span>
+            </div>
         </div>
+        
+        <!-- Multi-song options -->
+        <div class="multi-song-options" style="display: none;">
+            <div class="context-menu-item" id="context-add-selected-to-queue">
+                <i data-lucide="list-plus"></i>
+                <span id="context-add-selected-queue-text">Add Selected to Queue</span>
+            </div>
+            <div class="context-menu-separator"></div>
+            <div class="context-menu-item" id="context-deselect-all">
+                <i data-lucide="x"></i>
+                <span>Deselect All</span>
+            </div>
+        </div>
+
+        <!-- Common options for both single and multiple -->
+        <div class="context-menu-item submenu-parent" id="context-add-to-playlist">
+            <i data-lucide="folder-plus"></i>
+            <span id="context-add-playlist-text">Add to Playlist</span>
+            <i data-lucide="chevron-right" class="submenu-arrow"></i>
+            <div class="context-submenu" id="playlist-submenu">
+                <!-- Playlists will be populated dynamically -->
+            </div>
+        </div>
+        
+        <!-- Single song only options -->
+        <div class="single-song-only">
+            <div class="context-menu-separator"></div>
+            <div class="context-menu-item" id="context-search-artist">
+                <i data-lucide="user"></i>
+                Search all by <span id="context-artist-name">Artist</span>
+            </div>
+            <div class="context-menu-item" id="context-search-album">
+                <i data-lucide="disc"></i>
+                Search all by <span id="context-album-name">Album</span>
+            </div>
+            <div class="context-menu-separator"></div>
+            <div class="context-menu-item" id="context-like-song">
+                <i data-lucide="heart"></i>
+                <span id="context-like-text">Like Song</span>
+            </div>
+        </div>
+        
+        <!-- Delete option for both -->
         <div class="context-menu-separator"></div>
-        <div class="context-menu-item" id="context-play-next">
-            <i data-lucide="skip-forward"></i>
-            Play Next
-        </div>
-        <div class="context-menu-item" id="context-add-to-queue">
-            <i data-lucide="list-plus"></i>
-            Add to Queue
-        </div>
-        <div class="context-menu-separator"></div>
-        <div class="context-menu-item" id="context-search-artist">
-            <i data-lucide="user"></i>
-            Search all by <span id="context-artist-name">Artist</span>
-        </div>
-        <div class="context-menu-item" id="context-search-album">
-            <i data-lucide="disc"></i>
-            Search all by <span id="context-album-name">Album</span>
-        </div>
-        <div class="context-menu-separator"></div>
-        <div class="context-menu-item" id="context-like-song">
-            <i data-lucide="heart"></i>
-            <span id="context-like-text">Like Song</span>
-        </div>
         <div class="context-menu-item danger" id="context-delete-song">
             <i data-lucide="trash-2"></i>
-            Delete from Library
+            <span id="context-delete-text">Delete from Library</span>
+        </div>
+    </div>
+
+    <!-- Playlist Settings Modal -->
+    <div id="playlist-settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Playlist Settings</h3>
+                <button class="modal-close" id="playlist-settings-modal-close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="playlist-settings-section">
+                    <h4 id="current-playlist-name">Playlist Name</h4>
+                    <div class="form-group">
+                        <label for="playlist-rename-input">Rename Playlist</label>
+                        <input type="text" id="playlist-rename-input" class="form-input" placeholder="Enter new playlist name">
+                        <button id="rename-playlist-btn" class="btn btn-primary">Rename</button>
+                    </div>
+                </div>
+                
+                <div class="playlist-settings-section">
+                    <h4>Danger Zone</h4>
+                    <p class="danger-warning">Deleting a playlist cannot be undone.</p>
+                    <button id="delete-playlist-btn" class="btn btn-danger">Delete Playlist</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -424,6 +590,91 @@
         </div>
     </div>
 
+    <!-- Update Notification Popup -->
+    <div id="update-notification" class="update-notification">
+        <div class="update-header">
+            <div class="update-icon">
+                <i data-lucide="download"></i>
+            </div>
+            <div class="update-title">
+                <h4>Update Available</h4>
+                <p>Echo <span id="update-version">1.1.0</span> is ready to install</p>
+            </div>
+            <button id="close-update-btn" class="update-close-btn">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+        <div class="update-content">
+            <div class="update-info">
+                <div class="update-detail">
+                    <span class="update-label">Released:</span>
+                    <span id="update-date">Today</span>
+                </div>
+                <div class="update-detail">
+                    <span class="update-label">Size:</span>
+                    <span id="update-size">~45 MB</span>
+                </div>
+            </div>
+            <div class="update-changelog">
+                <p id="update-summary">New features and improvements</p>
+            </div>
+        </div>
+        <div class="update-actions">
+            <button id="update-later-btn" class="update-btn update-btn-secondary">Later</button>
+            <button id="update-skip-btn" class="update-btn update-btn-text">Skip This Version</button>
+            <button id="update-install-btn" class="update-btn update-btn-primary">Install Update</button>
+        </div>
+        <div class="update-footer">
+            <button id="update-history-btn" class="update-link">
+                <i data-lucide="clock"></i>
+                View Update History
+            </button>
+        </div>
+    </div>
+
+    <!-- Update History Modal -->
+    <div id="update-history-modal" class="modal">
+        <div class="modal-content update-history-content">
+            <div class="modal-header">
+                <h3>Update History</h3>
+                <button id="close-history-modal-btn" class="close-btn">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="current-version">
+                    <div class="version-badge current">
+                        <i data-lucide="check-circle"></i>
+                        <span>Current Version</span>
+                    </div>
+                    <div class="version-info">
+                        <h4 id="current-version-number">v1.0.0</h4>
+                        <p>You're running this version</p>
+                    </div>
+                </div>
+                <div id="version-history" class="version-history">
+                    <!-- Version history will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Download Progress -->
+    <div id="update-progress" class="update-progress">
+        <div class="progress-content">
+            <div class="progress-icon">
+                <i data-lucide="download"></i>
+            </div>
+            <div class="progress-info">
+                <h4>Downloading Update</h4>
+                <p id="progress-text">Preparing download...</p>
+            </div>
+        </div>
+        <div class="progress-bar-container">
+            <div id="download-progress-bar" class="progress-bar"></div>
+        </div>
+    </div>
+
     <!-- Utility scripts -->
     <script src="../src/renderer/utils/formatters.js"></script>
     
@@ -438,6 +689,8 @@
     <script src="../src/renderer/components/FolderManager.js"></script>
     <script src="../src/renderer/components/DragDropHandler.js"></script>
     <script src="../src/renderer/components/SettingsManager.js"></script>
+    <script src="../src/renderer/components/UpdateManager.js"></script>
+    <script src="../src/renderer/components/EqualizerManager.js"></script>
     <script src="../src/renderer/components/AudioPlayer.js"></script>
     
     <!-- Main scripts -->
@@ -446,8 +699,8 @@
     <!-- Initialize app -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Initialize Lucide icons
-            lucide.createIcons();
+            // Initialize local icons
+            window.localIcons.createIcons();
             
             // Initialize title bar
             window.titleBarManager = new TitleBarManager();

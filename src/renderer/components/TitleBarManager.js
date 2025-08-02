@@ -72,17 +72,20 @@ class TitleBarManager {
     if (icon) {
       if (this.isMaximized) {
         // Show restore icon
-        icon.setAttribute('data-lucide', 'copy');
+        if (typeof window.localIcons !== 'undefined') {
+          window.localIcons.setIcon(icon, 'copy');
+        } else {
+          icon.setAttribute('data-lucide', 'copy');
+        }
         maximizeBtn.title = 'Restore';
       } else {
         // Show maximize icon
-        icon.setAttribute('data-lucide', 'square');
+        if (typeof window.localIcons !== 'undefined') {
+          window.localIcons.setIcon(icon, 'square');
+        } else {
+          icon.setAttribute('data-lucide', 'square');
+        }
         maximizeBtn.title = 'Maximize';
-      }
-      
-      // Reinitialize Lucide icons
-      if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
       }
     }
   }

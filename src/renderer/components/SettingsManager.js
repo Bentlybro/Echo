@@ -140,6 +140,28 @@ class SettingsManager {
         this.hideSettings();
       }
     });
+    
+    // Update buttons
+    const checkUpdatesBtn = document.getElementById('check-updates-btn');
+    const showUpdateHistoryBtn = document.getElementById('show-update-history-btn');
+    
+    if (checkUpdatesBtn) {
+      checkUpdatesBtn.addEventListener('click', () => {
+        console.log('Manual update check requested');
+        if (window.electronAPI && window.electronAPI.checkForUpdates) {
+          window.electronAPI.checkForUpdates();
+        }
+      });
+    }
+    
+    if (showUpdateHistoryBtn) {
+      showUpdateHistoryBtn.addEventListener('click', () => {
+        console.log('Update history requested');
+        if (window.electronAPI && window.electronAPI.requestUpdateHistory) {
+          window.electronAPI.requestUpdateHistory();
+        }
+      });
+    }
   }
 
   initializeColorInputs() {
@@ -365,11 +387,23 @@ class SettingsManager {
     document.querySelector(`[data-tab-content="${tabName}"]`).classList.add('active');
   }
 
-  showSettings() {
+  async showSettings() {
     this.settingsModal.classList.add('active');
+    
+    // Update app version display
+    try {
+      const versionInfo = await window.electronAPI.getAppVersion();
+      const versionSpan = document.getElementById('app-version');
+      if (versionSpan && versionInfo) {
+        versionSpan.textContent = versionInfo.version;
+      }
+    } catch (error) {
+      console.error('Error getting app version:', error);
+    }
+    
     // Initialize Lucide icons for the new elements
-    if (typeof lucide !== 'undefined') {
-      lucide.createIcons();
+    if (typeof window.localIcons !== 'undefined') {
+      window.localIcons.createIcons();
     }
   }
 

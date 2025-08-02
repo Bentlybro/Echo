@@ -212,7 +212,12 @@ class AudioPlayer {
       this.isPlaying = true;
       this.playPauseBtn.className = 'control-btn play-btn';
       this.playPauseBtn.innerHTML = '<i data-lucide="pause"></i>';
-      lucide.createIcons();
+      window.localIcons.createIcons();
+      
+      // Connect to equalizer
+      if (window.musicPlayer && window.musicPlayer.equalizerManager) {
+        window.musicPlayer.equalizerManager.onAudioChange(this.audio);
+      }
       
       // Track song play and show notification
       if (this.currentSong && window.musicPlayer) {
@@ -225,7 +230,7 @@ class AudioPlayer {
       this.isPlaying = false;
       this.playPauseBtn.className = 'control-btn play-btn';
       this.playPauseBtn.innerHTML = '<i data-lucide="play"></i>';
-      lucide.createIcons();
+      window.localIcons.createIcons();
     }
   }
 
@@ -234,7 +239,7 @@ class AudioPlayer {
     this.isPlaying = false;
     this.playPauseBtn.className = 'control-btn play-btn';
     this.playPauseBtn.innerHTML = '<i data-lucide="play"></i>';
-    lucide.createIcons();
+    window.localIcons.createIcons();
   }
 
   previousTrack() {
@@ -350,15 +355,26 @@ class AudioPlayer {
     this.volumePercentageEl.textContent = Math.round(this.volume * 100) + '%';
     
     // Update mute button icon based on volume level
-    const muteIcon = this.muteBtn.querySelector('i');
-    if (this.volume === 0) {
-      muteIcon.setAttribute('data-lucide', 'volume-x');
-    } else if (this.volume < 0.5) {
-      muteIcon.setAttribute('data-lucide', 'volume-1');
-    } else {
-      muteIcon.setAttribute('data-lucide', 'volume-2');
+    const muteIcon = this.muteBtn?.querySelector('i');
+    if (muteIcon && typeof window.localIcons !== 'undefined') {
+      if (this.volume === 0) {
+        window.localIcons.setIcon(muteIcon, 'volume-x');
+      } else if (this.volume < 0.5) {
+        window.localIcons.setIcon(muteIcon, 'volume-1');
+      } else {
+        window.localIcons.setIcon(muteIcon, 'volume-2');
+      }
+    } else if (muteIcon) {
+      // Fallback for when localIcons isn't available
+      if (this.volume === 0) {
+        muteIcon.setAttribute('data-lucide', 'volume-x');
+      } else if (this.volume < 0.5) {
+        muteIcon.setAttribute('data-lucide', 'volume-1');
+      } else {
+        muteIcon.setAttribute('data-lucide', 'volume-2');
+      }
+      window.localIcons.createIcons();
     }
-    lucide.createIcons();
   }
 
   toggleMute() {
@@ -560,7 +576,7 @@ class AudioPlayer {
     this.isPlaying = false;
     this.playPauseBtn.className = 'control-btn play-btn';
     this.playPauseBtn.innerHTML = '<i data-lucide="play"></i>';
-    lucide.createIcons();
+    window.localIcons.createIcons();
     
     // Show error message to user
     const errorMsg = 'Error playing audio file. The file may be corrupted or in an unsupported format.';
@@ -818,8 +834,8 @@ class AudioPlayer {
 
     // Re-initialize lucide icons after a short delay to ensure DOM is ready
     setTimeout(() => {
-      if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
+      if (typeof window.localIcons !== 'undefined') {
+        window.localIcons.createIcons();
       }
     }, 10);
   }

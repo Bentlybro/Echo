@@ -15,6 +15,7 @@ class MusicPlayer {
     this.initializeElements();
     this.initializeServices();
     this.bindEvents();
+    this.loadAppVersion();
     this.loadData();
   }
 
@@ -50,12 +51,14 @@ class MusicPlayer {
       this.playlistModal, 
       this.playlistNameInput
     );
+    this.equalizerManager = new EqualizerManager();
     this.folderManager = new FolderManager(
       this.foldersModal, 
       this.watchedFoldersList, 
       this.notificationService
     );
     this.dragDropHandler = new DragDropHandler(this.dropZone, this);
+    this.updateManager = new UpdateManager();
   }
 
   bindEvents() {
@@ -203,9 +206,12 @@ class MusicPlayer {
   }
 
   renderCurrentView() {
+    // Hide equalizer view when switching to song list views
+    this.hideEqualizerView();
+    
     const songs = this.getCurrentSongs();
     this.songRenderer.renderSongs(songs);
-    this.songRenderer.updateSongCount(songs.length);
+    this.songRenderer.updateSongCount(songs.length, songs);
   }
 
   showPlaylist(playlistId) {
@@ -258,9 +264,40 @@ class MusicPlayer {
       case 'albums':
         this.currentViewTitle.textContent = 'Albums';
         break;
+      case 'equalizer':
+        this.showEqualizerView();
+        return; // Don't call renderCurrentView for equalizer
     }
     
     this.renderCurrentView();
+  }
+
+  showEqualizerView() {
+    // Hide song list container
+    const songListContainer = document.getElementById('song-list-container');
+    const equalizerContainer = document.getElementById('equalizer-container');
+    
+    if (songListContainer) {
+      songListContainer.style.display = 'none';
+    }
+    
+    if (equalizerContainer) {
+      equalizerContainer.style.display = 'block';
+    }
+  }
+
+  hideEqualizerView() {
+    // Show song list container and hide equalizer
+    const songListContainer = document.getElementById('song-list-container');
+    const equalizerContainer = document.getElementById('equalizer-container');
+    
+    if (songListContainer) {
+      songListContainer.style.display = 'block';
+    }
+    
+    if (equalizerContainer) {
+      equalizerContainer.style.display = 'none';
+    }
   }
 
   async showOpenDialog() {
@@ -342,6 +379,9 @@ class MusicPlayer {
       const result = await window.electronAPI.deleteSong(songId);
       if (result.success) {
         await this.loadData();
+        this.renderCurrentView(); // Refresh the UI to show updated list
+        // Also refresh playlists since the deleted song might be in playlists
+        await this.playlistManager.loadPlaylists();
         console.log('Song deleted successfully');
       } else {
         console.error('Error deleting song:', result.error);
@@ -523,10 +563,25 @@ class MusicPlayer {
     });
 
     document.getElementById('context-delete-song').addEventListener('click', () => {
-      if (this.contextMenuSong) {
+      if (this.contextMenuSelectedSongs && this.contextMenuSelectedSongs.length > 1) {
+        this.deleteMultipleSongs(this.contextMenuSelectedSongs);
+      } else if (this.contextMenuSong) {
         this.deleteSong(this.contextMenuSong.id);
+      }
+      this.hideContextMenu();
+    });
+
+    // Multi-selection event handlers
+    document.getElementById('context-add-selected-to-queue').addEventListener('click', () => {
+      if (this.contextMenuSelectedSongs && this.contextMenuSelectedSongs.length > 0) {
+        this.addMultipleSongsToQueue(this.contextMenuSelectedSongs);
         this.hideContextMenu();
       }
+    });
+
+    document.getElementById('context-deselect-all').addEventListener('click', () => {
+      this.songRenderer.clearSelection();
+      this.hideContextMenu();
     });
 
     // Prevent context menu from showing on right-click of context menu itself
@@ -535,14 +590,39 @@ class MusicPlayer {
     });
   }
 
-  showContextMenu(e, song) {
+  showContextMenu(e, song, selectedSongs = []) {
     e.preventDefault();
     this.contextMenuSong = song;
+    this.contextMenuSelectedSongs = selectedSongs.length > 1 ? selectedSongs : [song];
 
-    // Update context menu content
-    this.contextArtistName.textContent = song.artist || 'Unknown Artist';
-    this.contextAlbumName.textContent = song.album || 'Unknown Album';
-    this.contextLikeText.textContent = song.is_liked ? 'Unlike Song' : 'Like Song';
+    const isMultiSelect = selectedSongs.length > 1;
+    
+    // Show/hide appropriate menu sections
+    const singleOptions = this.contextMenu.querySelector('.single-song-options');
+    const multiOptions = this.contextMenu.querySelector('.multi-song-options');
+    const singleOnly = this.contextMenu.querySelector('.single-song-only');
+    
+    if (singleOptions) singleOptions.style.display = isMultiSelect ? 'none' : 'block';
+    if (multiOptions) multiOptions.style.display = isMultiSelect ? 'block' : 'none';
+    if (singleOnly) singleOnly.style.display = isMultiSelect ? 'none' : 'block';
+
+    // Update text content based on selection
+    if (isMultiSelect) {
+      const count = selectedSongs.length;
+      document.getElementById('context-add-selected-queue-text').textContent = `Add ${count} Songs to Queue`;
+      document.getElementById('context-add-playlist-text').textContent = `Add ${count} Songs to Playlist`;
+      document.getElementById('context-delete-text').textContent = `Delete ${count} Songs from Library`;
+    } else {
+      // Single song content
+      this.contextArtistName.textContent = song.artist || 'Unknown Artist';
+      this.contextAlbumName.textContent = song.album || 'Unknown Album';
+      this.contextLikeText.textContent = song.is_liked ? 'Unlike Song' : 'Like Song';
+      document.getElementById('context-add-playlist-text').textContent = 'Add to Playlist';
+      document.getElementById('context-delete-text').textContent = 'Delete from Library';
+    }
+    
+    // Populate playlist submenu
+    this.populatePlaylistSubmenu();
 
     // Temporarily show menu off-screen to measure its dimensions
     this.contextMenu.style.left = '-9999px';
@@ -582,6 +662,100 @@ class MusicPlayer {
     this.contextMenuSong = null;
   }
 
+  populatePlaylistSubmenu() {
+    const playlistSubmenu = document.getElementById('playlist-submenu');
+    if (!playlistSubmenu) return;
+
+    // Filter out "All Songs" playlist and get user-created playlists
+    const userPlaylists = this.playlists.filter(playlist => playlist.name !== 'All Songs');
+    
+    playlistSubmenu.innerHTML = userPlaylists.map(playlist => `
+      <div class="context-menu-item playlist-submenu-item" data-playlist-id="${playlist.id}">
+        <i data-lucide="music"></i>
+        ${playlist.name}
+      </div>
+    `).join('');
+
+    // Add event listeners to playlist submenu items
+    playlistSubmenu.querySelectorAll('.playlist-submenu-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const playlistId = parseInt(item.dataset.playlistId);
+        
+        if (this.contextMenuSelectedSongs && this.contextMenuSelectedSongs.length > 1) {
+          this.addMultipleSongsToPlaylist(this.contextMenuSelectedSongs, playlistId);
+        } else {
+          this.addSongToPlaylist(this.contextMenuSong.id, playlistId);
+        }
+        
+        this.hideContextMenu();
+      });
+    });
+
+    // Re-initialize Lucide icons for new elements
+    if (typeof window.localIcons !== 'undefined') {
+      window.localIcons.createIcons();
+    }
+  }
+
+  async addSongToPlaylist(songId, playlistId) {
+    try {
+      const result = await window.electronAPI.addSongToPlaylist(playlistId, songId);
+      if (result.success) {
+        const playlist = this.playlists.find(p => p.id === playlistId);
+        const playlistName = playlist ? playlist.name : 'playlist';
+        this.notificationService.showNotification(`Song added to "${playlistName}"`, 'success');
+        
+        // Refresh playlists to update song counts
+        await this.loadPlaylists();
+      } else {
+        this.notificationService.showNotification('Error adding song to playlist: ' + result.error, 'error');
+      }
+    } catch (error) {
+      console.error('Error adding song to playlist:', error);
+      this.notificationService.showNotification('Error adding song to playlist', 'error');
+    }
+  }
+
+  async addMultipleSongsToPlaylist(songs, playlistId) {
+    try {
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const song of songs) {
+        const result = await window.electronAPI.addSongToPlaylist(playlistId, song.id);
+        if (result.success) {
+          successCount++;
+        } else {
+          errorCount++;
+        }
+      }
+
+      const playlist = this.playlists.find(p => p.id === playlistId);
+      const playlistName = playlist ? playlist.name : 'playlist';
+      
+      if (successCount > 0) {
+        this.notificationService.showNotification(
+          `${successCount} song${successCount === 1 ? '' : 's'} added to "${playlistName}"`,
+          'success'
+        );
+      }
+      
+      if (errorCount > 0) {
+        this.notificationService.showNotification(
+          `${errorCount} song${errorCount === 1 ? '' : 's'} could not be added`,
+          'warning'
+        );
+      }
+      
+      // Refresh playlists to update song counts
+      await this.loadPlaylists();
+    } catch (error) {
+      console.error('Error adding songs to playlist:', error);
+      this.notificationService.showNotification('Error adding songs to playlist', 'error');
+    }
+  }
+
   searchByArtist(artist) {
     if (!artist || artist === 'Unknown Artist') return;
     this.searchInput.value = artist;
@@ -592,6 +766,72 @@ class MusicPlayer {
     if (!album || album === 'Unknown Album') return;
     this.searchInput.value = album;
     this.handleSearch(album);
+  }
+
+  playMultipleSongs(songs) {
+    if (songs.length === 0) return;
+    
+    // Play the first song and set up the playlist
+    window.audioPlayer.playPlaylist(songs, 0);
+    this.notificationService.showNotification(`Playing ${songs.length} songs`, 'success');
+  }
+
+  addMultipleSongsToQueue(songs) {
+    songs.forEach(song => {
+      window.audioPlayer.addToQueue(song);
+    });
+    
+    this.notificationService.showNotification(
+      `${songs.length} song${songs.length === 1 ? '' : 's'} added to queue`,
+      'success'
+    );
+  }
+
+  async deleteMultipleSongs(songs) {
+    const confirmDelete = confirm(`Are you sure you want to delete ${songs.length} songs from your library?\n\nThis action cannot be undone.`);
+    
+    if (confirmDelete) {
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const song of songs) {
+        try {
+          const result = await window.electronAPI.deleteSong(song.id);
+          if (result.success) {
+            successCount++;
+          } else {
+            errorCount++;
+          }
+        } catch (error) {
+          console.error('Error deleting song:', error);
+          errorCount++;
+        }
+      }
+
+      // Show results
+      if (successCount > 0) {
+        this.notificationService.showNotification(
+          `${successCount} song${successCount === 1 ? '' : 's'} deleted`,
+          'success'
+        );
+      }
+      
+      if (errorCount > 0) {
+        this.notificationService.showNotification(
+          `${errorCount} song${errorCount === 1 ? '' : 's'} could not be deleted`,
+          'error'
+        );
+      }
+
+      // Refresh the UI
+      await this.loadData();
+      this.renderCurrentView();
+      
+      // Clear selection after delete
+      if (this.songRenderer) {
+        this.songRenderer.clearSelection();
+      }
+    }
   }
 
   setupMediaKeys() {
@@ -657,6 +897,18 @@ class MusicPlayer {
       this.recentlyPlayed = await window.electronAPI.getRecentlyPlayed();
     } catch (error) {
       console.error('Error tracking song play:', error);
+    }
+  }
+
+  async loadAppVersion() {
+    try {
+      const versionInfo = await window.electronAPI.getAppVersion();
+      const versionSpan = document.getElementById('app-version');
+      if (versionSpan && versionInfo) {
+        versionSpan.textContent = versionInfo.version;
+      }
+    } catch (error) {
+      console.error('Error loading app version:', error);
     }
   }
 }

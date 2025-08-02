@@ -1,21 +1,31 @@
 {
-  "name": "simple-music-player",
-  "version": "1.0.0",
-  "description": "A simple cross-platform music player with drag-and-drop support",
+  "name": "echo-music-player",
+  "version": "1.0.3",
+  "description": "A clean, minimal desktop music player built with Electron. Features local music management, smart playback history, custom notifications, and a wireframe-inspired design.",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "dev": "electron . --development",
-    "build": "electron-builder",
-    "pack": "electron-builder --dir"
+    "build": "npm run clean-build && electron-builder",
+    "build:win": "npm run clean-build && electron-builder --win",
+    "build:mac": "npm run clean-build && electron-builder --mac",
+    "build:linux": "npm run clean-build && electron-builder --linux",
+    "pack": "electron-builder --dir",
+    "rebuild": "electron-rebuild",
+    "clean-build": "npm run clean && npm install && npm run rebuild",
+    "clean": "rimraf node_modules package-lock.json",
+    "postinstall": "electron-rebuild"
   },
   "keywords": [
     "music",
     "player",
     "electron",
-    "cross-platform"
+    "cross-platform",
+    "minimal",
+    "wireframe",
+    "local-music"
   ],
-  "author": "Music Player Developer",
+  "author": "Echo Developer",
   "license": "MIT",
   "dependencies": {
     "better-sqlite3": "^12.2.0",
@@ -25,11 +35,12 @@
   "devDependencies": {
     "electron": "^27.0.0",
     "electron-builder": "^24.6.4",
-    "electron-rebuild": "^3.2.9"
+    "electron-rebuild": "^3.2.9",
+    "rimraf": "^5.0.10"
   },
   "build": {
-    "appId": "com.musicplayer.app",
-    "productName": "Simple Music Player",
+    "appId": "com.echo.musicplayer",
+    "productName": "Echo",
     "directories": {
       "output": "dist"
     },
@@ -46,6 +57,31 @@
       "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
       "!**/{appveyor.yml,.travis.yml,circle.yml}",
       "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
-    ]
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false
+    }
   }
 }

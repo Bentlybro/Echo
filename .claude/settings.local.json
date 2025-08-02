@@ -5,7 +5,8 @@
       "Bash(npm install)",
       "Bash(npm uninstall:*)",
       "Bash(npm install:*)",
-      "Bash(npx:*)"
+      "Bash(npx:*)",
+      "Bash(npm run pack:*)"
     ],
     "deny": []
   }
