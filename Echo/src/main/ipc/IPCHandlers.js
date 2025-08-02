@@ -102,6 +102,10 @@ class IPCHandlers {
     ipcMain.handle('scan-folder', async (event, folderPath) => {
       return this.folderWatcher.scanFolder(folderPath);
     });
+
+    ipcMain.handle('get-folder-watcher-status', async () => {
+      return this.folderWatcher.getQueueStatus();
+    });
   }
 
   setupTrayHandlers() {

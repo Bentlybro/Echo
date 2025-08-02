@@ -155,6 +155,7 @@ class MusicPlayerApp {
   setupAppEvents() {
     app.on('window-all-closed', () => {
       if (process.platform !== 'darwin') {
+        this.cleanup();
         app.quit();
       }
     });
@@ -164,6 +165,35 @@ class MusicPlayerApp {
         this.mainWindow = this.windowManager.createWindow();
       }
     });
+
+    app.on('before-quit', () => {
+      this.cleanup();
+    });
+  }
+
+  cleanup() {
+    console.log('Starting application cleanup...');
+    
+    try {
+      // Cleanup FolderWatcher first to stop any ongoing operations
+      if (this.folderWatcher) {
+        this.folderWatcher.cleanup();
+      }
+      
+      // Close database connection
+      if (this.database && typeof this.database.close === 'function') {
+        this.database.close();
+      }
+      
+      // Cleanup tray service
+      if (this.trayService) {
+        this.trayService.destroyTray();
+      }
+      
+      console.log('Application cleanup completed');
+    } catch (error) {
+      console.error('Error during cleanup:', error);
+    }
   }
 
   getMainWindow() {
